@@ -1,0 +1,9 @@
+from rest_framework.permissions import BasePermission
+
+class IsProfessorOrMonitor(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.tipo in ['professor', 'monitor']
+
+class IsOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.professor_monitor == request.user
