@@ -7,17 +7,16 @@
   width: 100%;
 }
 
-/* Novo contêiner para centralizar a mensagem */
 .welcome-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%; /* Ocupa toda a altura da área de conteúdo */
+  height: 100%;
   padding: 2rem;
 }
 
 .main-header {
-  text-align: center; /* Centraliza o texto dentro do header */
+  text-align: center;
   max-width: 800px;
 }
 

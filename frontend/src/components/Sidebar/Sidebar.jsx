@@ -18,7 +18,6 @@ const Sidebar = () => {
 
   return (
     <aside className="sidebar">
-      {/* SEÇÃO DO PERFIL RESTAURADA */}
       <div className="sidebar-profile">
         <FaUserCircle className="sidebar-icon profile-icon" />
         <div>
@@ -29,7 +28,6 @@ const Sidebar = () => {
 
       <nav className="sidebar-nav">
         <ul>
-          {/* Usei NavLink para que o link ativo seja destacado */}
           <li><NavLink to="/dashboard/criar-agenda"><FaCalendarPlus className="sidebar-icon" /> Criar Agenda</NavLink></li>
           <li><NavLink to="/dashboard/adicionar-horario"><FaClock className="sidebar-icon" /> Adicionar Horário</NavLink></li>
           <li><NavLink to="/dashboard/editar-horario"><FaEdit className="sidebar-icon" /> Editar/Deletar Horário</NavLink></li>
@@ -37,7 +35,6 @@ const Sidebar = () => {
         </ul>
       </nav>
 
-      {/* RODAPÉ RESTAURADO */}
       <div className="sidebar-footer">
         <a href="#" className="delete-account">
           <FaTrashAlt className="sidebar-icon" /> Excluir Conta

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom'; // Importe o Outlet
+import { Outlet } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import './Dashboard.css';
 

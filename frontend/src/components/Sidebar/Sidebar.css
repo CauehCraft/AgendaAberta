@@ -1,6 +1,6 @@
 .sidebar {
   width: 280px;
-  flex-shrink: 0; /* Impede que a sidebar encolha */
+  flex-shrink: 0;
   background-color: #f8f9fa;
   border-right: 1px solid #e0e0e0;
   height: 100vh;
@@ -13,7 +13,6 @@
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid #e0e0e0;
-  /* Novo: Alinhamento com o ícone */
   display: flex;
   align-items: center;
 }
@@ -39,7 +38,6 @@
   margin: 0;
 }
 
-/* Novo: Alinhamento para o link e o ícone */
 .sidebar-nav li a {
   display: flex;
   align-items: center;
@@ -57,19 +55,17 @@
   color: #0056b3;
 }
 
-/* Novo: Estilo para os ícones */
 .sidebar-icon {
   margin-right: 0.8rem;
   font-size: 1.2rem;
   color: #4a5568;
-  flex-shrink: 0; /* Garante que o ícone não seja espremido */
+  flex-shrink: 0;
 }
 
 .profile-icon {
-  font-size: 2.5rem; /* Ícone de perfil um pouco maior */
+  font-size: 2.5rem;
 }
 
-/* Estilo para a opção "Excluir Conta" no rodapé */
 .sidebar-footer {
   margin-top: auto;
 }

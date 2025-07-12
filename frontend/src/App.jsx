@@ -17,10 +17,8 @@ function App() {
           path="/dashboard" 
           element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
         >
-          {/* ROTA INDEX: Renderiza quando a URL for exatamente "/dashboard" */}
           <Route index element={<Welcome />} /> 
           
-          {/* Outras rotas aninhadas */}
           <Route path="adicionar-horario" element={<AdicionarHorario />} />
         </Route>
 

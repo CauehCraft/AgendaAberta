@@ -1,5 +1,3 @@
-/* src/pages/AdicionarHorario/AdicionarHorario.css */
-
 .form-container {
   padding: 2rem 3rem;
   background-color: #fff;
@@ -18,7 +16,6 @@
 }
 
 .input-group label {
-  /* Garante que o rótulo sempre apareça acima do campo */
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
@@ -26,7 +23,6 @@
   margin-bottom: 0.5rem;
 }
 
-/* Estilos base para os campos de formulário */
 .input-group select,
 .input-group .time-input-wrapper input {
   padding: 0.85rem 1rem;
@@ -36,11 +32,9 @@
   font-size: 1rem;
   color: #111827;
   font-family: inherit;
-  width: 100%; /* Ocupa 100% do seu contêiner pai */
+  width: 100%;
 }
 
-/* CORREÇÃO 1: Largura dos dropdowns */
-/* Vamos limitar a largura do contêiner dos dropdowns */
 .input-group.dropdown-group {
   max-width: 450px;
 }
@@ -55,16 +49,14 @@
   padding-right: 2.8rem;
 }
 
-
-/* CORREÇÃO 2: Layout e rótulos dos campos de horário */
 .time-inputs-container {
   display: flex;
   gap: 1.5rem;
-  max-width: 450px; /* Alinha a largura com os dropdowns */
+  max-width: 450px;
 }
 
 .time-inputs-container .input-group {
-  flex: 1; /* Faz com que cada campo de horário ocupe metade do espaço */
+  flex: 1;
 }
 
 .time-input-wrapper {
@@ -83,5 +75,5 @@
 .btn-salvar {
   max-width: 200px;
   padding: 0.9rem 2rem;
-  margin-top: 1rem; /* Adiciona um espaço acima do botão */
+  margin-top: 1rem;
 }
