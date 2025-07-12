@@ -1,0 +1,87 @@
+/* src/pages/AdicionarHorario/AdicionarHorario.css */
+
+.form-container {
+  padding: 2rem 3rem;
+  background-color: #fff;
+  height: 100%;
+}
+
+.form-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 2.5rem;
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+.input-group label {
+  /* Garante que o rótulo sempre apareça acima do campo */
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+}
+
+/* Estilos base para os campos de formulário */
+.input-group select,
+.input-group .time-input-wrapper input {
+  padding: 0.85rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: #f9fafb;
+  font-size: 1rem;
+  color: #111827;
+  font-family: inherit;
+  width: 100%; /* Ocupa 100% do seu contêiner pai */
+}
+
+/* CORREÇÃO 1: Largura dos dropdowns */
+/* Vamos limitar a largura do contêiner dos dropdowns */
+.input-group.dropdown-group {
+  max-width: 450px;
+}
+
+.input-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.7rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.8rem;
+}
+
+
+/* CORREÇÃO 2: Layout e rótulos dos campos de horário */
+.time-inputs-container {
+  display: flex;
+  gap: 1.5rem;
+  max-width: 450px; /* Alinha a largura com os dropdowns */
+}
+
+.time-inputs-container .input-group {
+  flex: 1; /* Faz com que cada campo de horário ocupe metade do espaço */
+}
+
+.time-input-wrapper {
+  position: relative;
+}
+
+.time-input-wrapper .time-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  pointer-events: none;
+}
+
+.btn-salvar {
+  max-width: 200px;
+  padding: 0.9rem 2rem;
+  margin-top: 1rem; /* Adiciona um espaço acima do botão */
+}

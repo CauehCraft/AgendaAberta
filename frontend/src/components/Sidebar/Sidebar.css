@@ -1,0 +1,109 @@
+.sidebar {
+  width: 280px;
+  flex-shrink: 0; /* Impede que a sidebar encolha */
+  background-color: #f8f9fa;
+  border-right: 1px solid #e0e0e0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+.sidebar-profile {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  /* Novo: Alinhamento com o ícone */
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-profile h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.sidebar-profile p {
+  margin: 0;
+  color: #666;
+}
+
+.sidebar-nav {
+  flex-grow: 1;
+}
+
+.sidebar-nav ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Novo: Alinhamento para o link e o ícone */
+.sidebar-nav li a {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  text-decoration: none;
+  color: #333;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.sidebar-nav li a:hover,
+.sidebar-nav li a.active {
+  background-color: #e9ecef;
+  color: #0056b3;
+}
+
+/* Novo: Estilo para os ícones */
+.sidebar-icon {
+  margin-right: 0.8rem;
+  font-size: 1.2rem;
+  color: #4a5568;
+  flex-shrink: 0; /* Garante que o ícone não seja espremido */
+}
+
+.profile-icon {
+  font-size: 2.5rem; /* Ícone de perfil um pouco maior */
+}
+
+/* Estilo para a opção "Excluir Conta" no rodapé */
+.sidebar-footer {
+  margin-top: auto;
+}
+
+.delete-account {
+  display: flex;
+  align-items: center;
+  color: #d9534f;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+.delete-account:hover {
+  background-color: #f8d7da;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .sidebar-nav ul {
+    display: flex;
+  }
+  .sidebar-footer {
+    display: none;
+  }
+}
