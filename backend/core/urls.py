@@ -4,10 +4,15 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from .views import AgendamentoViewSet, DeleteUserView, HorarioViewSet, RegisterView
+from .views import (
+    AgendamentoViewSet, DeleteUserView, DisciplinaViewSet, 
+    HorarioViewSet, HorarioPublicViewSet, RegisterView
+)
 
 router = DefaultRouter()
+router.register(r'disciplinas', DisciplinaViewSet)
 router.register(r'horarios', HorarioViewSet)
+router.register(r'horarios-publicos', HorarioPublicViewSet, basename='horario-publico')
 router.register(r'agendamentos', AgendamentoViewSet)
 
 urlpatterns = [

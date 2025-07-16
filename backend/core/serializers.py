@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils import timezone
 from .models import Agendamento, CustomUser, Disciplina, Horario
 
 class UserSerializer(serializers.ModelSerializer):
@@ -10,6 +11,17 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = CustomUser.objects.create_user(**validated_data)
         return user
+
+class UserBasicSerializer(serializers.ModelSerializer):
+    """Serializer básico para usuários, sem informações sensíveis"""
+    nome_completo = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'tipo', 'nome_completo')
+    
+    def get_nome_completo(self, obj):
+        return f"{obj.first_name} {obj.last_name}".strip() or obj.username
 
 class DisciplinaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,7 +58,107 @@ class HorarioSerializer(serializers.ModelSerializer):
         
         return data
 
+
+class HorarioDetailSerializer(serializers.ModelSerializer):
+    """Serializer detalhado para horários, incluindo dados relacionados"""
+    disciplina = DisciplinaSerializer(read_only=True)
+    professor_monitor = UserBasicSerializer(read_only=True)
+    tempo_desde_atualizacao = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Horario
+        fields = '__all__'
+    
+    def get_tempo_desde_atualizacao(self, obj):
+        """Retorna o tempo desde a última atualização em formato legível"""
+        agora = timezone.now()
+        diferenca = agora - obj.ultima_atualizacao
+        
+        # Converter para dias, horas, minutos
+        dias = diferenca.days
+        horas = diferenca.seconds // 3600
+        minutos = (diferenca.seconds % 3600) // 60
+        
+        if dias > 0:
+            return f"{dias} dia(s) atrás"
+        elif horas > 0:
+            return f"{horas} hora(s) atrás"
+        elif minutos > 0:
+            return f"{minutos} minuto(s) atrás"
+        else:
+            return "Agora mesmo"
+
+
+class HorarioPublicSerializer(serializers.ModelSerializer):
+    """Serializer para visualização pública de horários, sem informações sensíveis"""
+    disciplina_nome = serializers.CharField(source='disciplina.nome', read_only=True)
+    disciplina_codigo = serializers.CharField(source='disciplina.codigo', read_only=True)
+    curso = serializers.CharField(source='disciplina.curso', read_only=True)
+    professor_nome = serializers.SerializerMethodField()
+    ultima_atualizacao_formatada = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Horario
+        fields = [
+            'id', 'dia_semana', 'hora_inicio', 'hora_fim', 'local',
+            'disciplina_nome', 'disciplina_codigo', 'curso',
+            'professor_nome', 'ultima_atualizacao_formatada'
+        ]
+    
+    def get_professor_nome(self, obj):
+        """Retorna o nome do professor/monitor"""
+        if obj.professor_monitor.first_name or obj.professor_monitor.last_name:
+            return f"{obj.professor_monitor.first_name} {obj.professor_monitor.last_name}".strip()
+        return obj.professor_monitor.username
+    
+    def get_ultima_atualizacao_formatada(self, obj):
+        """Retorna a data de última atualização em formato legível"""
+        agora = timezone.now()
+        diferenca = agora - obj.ultima_atualizacao
+        
+        # Converter para dias, horas, minutos
+        dias = diferenca.days
+        horas = diferenca.seconds // 3600
+        minutos = (diferenca.seconds % 3600) // 60
+        
+        if dias > 0:
+            return f"{dias} dia(s) atrás"
+        elif horas > 0:
+            return f"{horas} hora(s) atrás"
+        elif minutos > 0:
+            return f"{minutos} minuto(s) atrás"
+        else:
+            return "Agora mesmo"
+
 class AgendamentoSerializer(serializers.ModelSerializer):
+    """
+    Serializer para o modelo Agendamento.
+    
+    Nota: Este sistema é principalmente para visualização de horários disponíveis,
+    não para agendamento. O modelo Agendamento existe para registrar interesse em
+    horários específicos, mas não é o foco principal do sistema.
+    """
+    horario_detalhes = serializers.SerializerMethodField()
+    mensagem_visualizacao = serializers.SerializerMethodField()
+    
     class Meta:
         model = Agendamento
         fields = '__all__'
+        extra_kwargs = {
+            'aluno': {'read_only': True}
+        }
+    
+    def get_horario_detalhes(self, obj):
+        """Retorna detalhes do horário relacionado"""
+        return {
+            'dia_semana': obj.horario.dia_semana,
+            'hora_inicio': obj.horario.hora_inicio,
+            'hora_fim': obj.horario.hora_fim,
+            'local': obj.horario.local,
+            'disciplina': obj.horario.disciplina.nome,
+            'professor': obj.horario.professor_monitor.username
+        }
+    
+    def get_mensagem_visualizacao(self, obj):
+        """Retorna mensagem informativa sobre o propósito do sistema"""
+        return "Este sistema é principalmente para visualização de horários disponíveis, não para agendamento."
