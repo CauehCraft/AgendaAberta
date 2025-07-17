@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Agendamento, CustomUser, Disciplina, Horario
+from .models import CustomUser, Disciplina, Horario
 
 admin.site.register(CustomUser)
 
@@ -11,4 +11,3 @@ class DisciplinaAdmin(admin.ModelAdmin):
     ordering = ('codigo', 'nome')
 
 admin.site.register(Horario)
-admin.site.register(Agendamento)

@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from .views import (
-    AgendamentoViewSet, DeleteUserView, DisciplinaViewSet, 
+    DeleteUserView, DisciplinaViewSet, 
     HorarioViewSet, HorarioPublicViewSet, RegisterView
 )
 
@@ -13,7 +13,7 @@ router = DefaultRouter()
 router.register(r'disciplinas', DisciplinaViewSet)
 router.register(r'horarios', HorarioViewSet)
 router.register(r'horarios-publicos', HorarioPublicViewSet, basename='horario-publico')
-router.register(r'agendamentos', AgendamentoViewSet)
+
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),

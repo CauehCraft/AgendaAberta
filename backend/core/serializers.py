@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Agendamento, CustomUser, Disciplina, Horario
+from .models import CustomUser, Disciplina, Horario
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -130,35 +130,4 @@ class HorarioPublicSerializer(serializers.ModelSerializer):
         else:
             return "Agora mesmo"
 
-class AgendamentoSerializer(serializers.ModelSerializer):
-    """
-    Serializer para o modelo Agendamento.
-    
-    Nota: Este sistema é principalmente para visualização de horários disponíveis,
-    não para agendamento. O modelo Agendamento existe para registrar interesse em
-    horários específicos, mas não é o foco principal do sistema.
-    """
-    horario_detalhes = serializers.SerializerMethodField()
-    mensagem_visualizacao = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Agendamento
-        fields = '__all__'
-        extra_kwargs = {
-            'aluno': {'read_only': True}
-        }
-    
-    def get_horario_detalhes(self, obj):
-        """Retorna detalhes do horário relacionado"""
-        return {
-            'dia_semana': obj.horario.dia_semana,
-            'hora_inicio': obj.horario.hora_inicio,
-            'hora_fim': obj.horario.hora_fim,
-            'local': obj.horario.local,
-            'disciplina': obj.horario.disciplina.nome,
-            'professor': obj.horario.professor_monitor.username
-        }
-    
-    def get_mensagem_visualizacao(self, obj):
-        """Retorna mensagem informativa sobre o propósito do sistema"""
-        return "Este sistema é principalmente para visualização de horários disponíveis, não para agendamento."
+
