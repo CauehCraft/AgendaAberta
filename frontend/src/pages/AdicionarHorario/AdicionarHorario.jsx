@@ -1,45 +1,109 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import ptBR from 'date-fns/locale/pt-BR';
+
+import 'react-datepicker/dist/react-datepicker.css';
 import './AdicionarHorario.css';
 
+registerLocale('pt-BR', ptBR);
+
 const AdicionarHorario = () => {
+  const [dataInicio, setDataInicio] = useState(null);
+  const [dataFim, setDataFim] = useState(null);
+  const [local, setLocal] = useState('');
+  const [mensagemSucesso, setMensagemSucesso] = useState('');
+  
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const handleSubmit = (event) => {
+    event.preventDefault(); 
+    setMensagemSucesso('');
+    clearTimeout(timerRef.current); // Limpa qualquer timer anterior
+
+    if (!dataInicio || !dataFim || !local) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+    
+    if (dataFim <= dataInicio) {
+      alert('Erro: O horário de fim deve ser posterior ao horário de início.');
+      return;
+    }
+
+    setMensagemSucesso('Horário salvo com sucesso!');
+
+    // Limpa os campos do formulário
+    setDataInicio(null);
+    setDataFim(null);
+    setLocal('');
+    
+    timerRef.current = setTimeout(() => {
+      setMensagemSucesso('');
+    }, 4000);
+  };
+
   return (
     <div className="form-container">
       <h1 className="form-title">Adicionar Horário</h1>
-      <form>
-        <div className="input-group dropdown-group">
-          <label htmlFor="dia-semana">Dia da Semana</label>
-          <select id="dia-semana" defaultValue="">
-            <option value="" disabled>Selecione o Dia</option>
-            <option value="seg">Segunda-feira</option>
-            <option value="ter">Terça-feira</option>
-            <option value="qua">Quarta-feira</option>
-            <option value="qui">Quinta-feira</option>
-            <option value="sex">Sexta-feira</option>
-          </select>
-        </div>
-
+      
+      <form onSubmit={handleSubmit}>
         <div className="time-inputs-container">
           <div className="input-group">
             <label htmlFor="horario-inicio">Horário de Início</label>
-            <div className="time-input-wrapper">
-              <input id="horario-inicio" type="datetime-local" />
-            </div>
+            <DatePicker
+              id="horario-inicio"
+              selected={dataInicio}
+              onChange={(date) => {
+                setDataInicio(date);
+                setDataFim(null);
+              }}
+              selectsStart
+              startDate={dataInicio}
+              endDate={dataFim}
+              minDate={new Date()}
+              showTimeSelect
+              locale="pt-BR"
+              dateFormat="dd/MM/yyyy, HH:mm"
+              timeFormat="HH:mm"
+              placeholderText="Selecione data e hora"
+              autoComplete="off"
+            />
           </div>
           <div className="input-group">
             <label htmlFor="horario-fim">Horário de Fim</label>
-            <div className="time-input-wrapper">
-              <input id="horario-fim" type="datetime-local" />
-            </div>
+            <DatePicker
+              id="horario-fim"
+              selected={dataFim}
+              onChange={(date) => setDataFim(date)}
+              selectsEnd
+              startDate={dataInicio}
+              endDate={dataFim}
+              minDate={dataInicio}
+              showTimeSelect={!!dataInicio}
+              locale="pt-BR"
+              dateFormat="dd/MM/yyyy, HH:mm"
+              placeholderText={dataInicio ? "Selecione data e hora" : "Selecione o início primeiro"}
+              autoComplete="off"
+              disabled={!dataInicio}
+            />
           </div>
         </div>
 
         <div className="input-group dropdown-group">
           <label htmlFor="local">Local</label>
-          <select id="local" defaultValue="">
+          <select id="local" value={local} onChange={(e) => setLocal(e.target.value)}>
             <option value="" disabled>Insira o Local</option>
-            <option value="sala_201">Sala 201</option>
-            <option value="lab_info_1">Laboratório de Informática 1</option>
-            <option value="online">Online</option>
+            <option value="Sala de Reuniões 1">Sala de Reuniões 1</option>
+            <option value="Sala de Reuniões 2">Sala de Reuniões 2</option>
+            <option value="Auditório Principal">Auditório Principal</option>
+            <option value="Laboratório de Inovação">Laboratório de Inovação</option>
+            <option value="Espaço Café">Espaço Café</option>
           </select>
         </div>
 
@@ -47,6 +111,12 @@ const AdicionarHorario = () => {
           Salvar
         </button>
       </form>
+      
+      {mensagemSucesso && (
+        <div className="mensagem-sucesso"> 
+          {mensagemSucesso}
+        </div>
+      )}
     </div>
   );
 };
