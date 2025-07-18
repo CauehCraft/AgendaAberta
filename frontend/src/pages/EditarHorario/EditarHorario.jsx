@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { FaEdit, FaTrashAlt } from 'react-icons/fa';
 import './EditarHorario.css';
+import ModalConfirmacao from '../../components/ModalConfirmacao/ModalConfirmacao';
 
-// 1. Dados de exemplo (substituir por dados da API no futuro)
-const mockHorarios = [
+// Dados de exemplo
+const initialHorarios = [
   { id: 1, dia: 'Segunda-feira', inicio: '09:00', fim: '10:00', materia: 'Matemática' },
   { id: 2, dia: 'Terça-feira', inicio: '11:00', fim: '12:00', materia: 'Física' },
   { id: 3, dia: 'Quarta-feira', inicio: '14:00', fim: '15:00', materia: 'Química' },
@@ -14,24 +15,44 @@ const mockHorarios = [
 ];
 
 const EditarHorario = () => {
-  // 2. Estado para controlar a paginação
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Quantos itens por página
+  // Estado para armazenar a lista de horários
+  const [horarios, setHorarios] = useState(initialHorarios);
 
-  // 3. Lógica da Paginação
+  // Estado para controlar a paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Estados para controlar o modal de confirmação
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [itemParaDeletar, setItemParaDeletar] = useState(null);
+
+  // Lógica da Paginação
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = mockHorarios.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(mockHorarios.length / itemsPerPage);
+  const currentItems = horarios.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(horarios.length / itemsPerPage);
+
+  // --- Funções de Ação ---
 
   const handleEdit = (id) => {
-    // Lógica para editar (será implementada no futuro)
+    // A lógica para editar será implementada no futuro
     alert(`Editar item com ID: ${id}`);
   };
 
-  const handleDelete = (id) => {
-    // Lógica para deletar (será implementada no futuro)
-    alert(`Deletar item com ID: ${id}`);
+  const handleOpenDeleteModal = (id) => {
+    setItemParaDeletar(id); 
+    setIsModalOpen(true); 
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setItemParaDeletar(null); 
+  };
+
+  const handleConfirmDelete = () => {
+    const novaLista = horarios.filter((item) => item.id !== itemParaDeletar);
+    setHorarios(novaLista);
+    handleCloseModal();    
   };
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -61,7 +82,7 @@ const EditarHorario = () => {
                 <button onClick={() => handleEdit(horario.id)} className="action-btn edit-btn">
                   <FaEdit /> Editar
                 </button>
-                <button onClick={() => handleDelete(horario.id)} className="action-btn delete-btn">
+                <button onClick={() => handleOpenDeleteModal(horario.id)} className="action-btn delete-btn">
                   <FaTrashAlt /> Excluir
                 </button>
               </td>
@@ -70,7 +91,7 @@ const EditarHorario = () => {
         </tbody>
       </table>
 
-      {/* 4. Componente de Paginação */}
+      {/* Renderização da Paginação */}
       <div className="pagination">
         {Array.from({ length: totalPages }, (_, index) => (
           <button
@@ -82,6 +103,16 @@ const EditarHorario = () => {
           </button>
         ))}
       </div>
+
+      {/* Renderização do Modal de Confirmação */}
+      <ModalConfirmacao
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmDelete}
+        title="Confirmar Exclusão"
+      >
+        <p>Você tem certeza de que deseja excluir este horário? Esta ação não pode ser desfeita.</p>
+      </ModalConfirmacao>
     </div>
   );
 };
