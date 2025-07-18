@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
@@ -6,11 +5,13 @@ import AdicionarHorario from './pages/AdicionarHorario/AdicionarHorario';
 import EditarHorario from './pages/EditarHorario/EditarHorario';
 import VisualizarAgenda from './pages/VisualizarAgenda/VisualizarAgenda';
 import Welcome from './pages/Welcome/Welcome';
+import { AuthProvider } from './context/AuthProvider';
 
 function App() {
   const isAuthenticated = true;
 
   return (
+  <AuthProvider>
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -25,6 +26,7 @@ function App() {
         <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard/adicionar-horario" : "/login"} />} />
       </Routes>
     </Router>
+    </AuthProvider>
   );
 }
 
