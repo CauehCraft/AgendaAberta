@@ -318,3 +318,17 @@ class DisciplinaViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(curso__icontains=curso)
             
         return queryset
+
+class MeView(APIView):
+    """
+    Retorna os dados do usuário atualmente autenticado.
+    """
+    permission_classes = [IsAuthenticated] # Garante que apenas usuários logados podem acessar
+    serializer_class = UserBasicSerializer # Define o serializer que será usado
+
+    def get(self, request, *args, **kwargs):
+        """
+        Pega o usuário da requisição e o serializa com UserBasicSerializer.
+        """
+        serializer = self.serializer_class(request.user)
+        return Response(serializer.data)

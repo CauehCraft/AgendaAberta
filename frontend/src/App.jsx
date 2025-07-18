@@ -6,6 +6,8 @@ import EditarHorario from './pages/EditarHorario/EditarHorario';
 import VisualizarAgenda from './pages/VisualizarAgenda/VisualizarAgenda';
 import Welcome from './pages/Welcome/Welcome';
 import { AuthProvider } from './context/AuthProvider';
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
+
 
 function App() {
   const isAuthenticated = true;
@@ -16,11 +18,14 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         
+        {/* ROTA PROTEGIDA */}
+        <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} >
           <Route index element={<Welcome />} /> 
           <Route path="adicionar-horario" element={<AdicionarHorario />} />
           <Route path="editar-horario" element={<EditarHorario />} />
           <Route path="visualizar-agenda" element={<VisualizarAgenda />} />
+        </Route>
         </Route>
 
         <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard/adicionar-horario" : "/login"} />} />
