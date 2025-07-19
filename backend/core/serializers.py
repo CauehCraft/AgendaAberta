@@ -31,7 +31,21 @@ class DisciplinaSerializer(serializers.ModelSerializer):
 class HorarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Horario
-        fields = '__all__'
+        # ALTERAÇÃO 1: Trocado '__all__' por uma lista explícita de campos.
+        fields = [
+            'id', 
+            'disciplina', 
+            'dia_semana', 
+            'hora_inicio', 
+            'hora_fim', 
+            'local', 
+            'professor_monitor', 
+            'ativo', 
+            'ultima_atualizacao', 
+            'data_criacao'
+        ]
+        # ALTERAÇÃO 2: Informar que 'professor_monitor' é um campo apenas de leitura.
+        read_only_fields = ['professor_monitor']
 
     def validate(self, data):
         instance = self.instance
@@ -54,7 +68,23 @@ class HorarioSerializer(serializers.ModelSerializer):
                 qs = qs.exclude(pk=instance.pk)
             
             if qs.exists():
-                raise serializers.ValidationError("Conflito de horário. O professor/monitor já possui um horário neste intervalo.")
+                raise serializers.ValidationError("Conflito de horário. Você já possui um horário neste intervalo.")
+
+        local = data.get('local', getattr(instance, 'local', None))
+        if local and dia_semana and hora_inicio and hora_fim:
+            conflito_de_sala = Horario.objects.filter(
+                local=local,
+                dia_semana=dia_semana,
+                hora_inicio__lt=hora_fim,
+                hora_fim__gt=hora_inicio
+            )
+            if instance:
+                conflito_de_sala = conflito_de_sala.exclude(pk=instance.pk)
+            
+            if conflito_de_sala.exists():
+                raise serializers.ValidationError(
+                    "Conflito de agendamento: Esta sala já está reservada neste mesmo horário por outro professor/monitor."
+                )
         
         return data
 

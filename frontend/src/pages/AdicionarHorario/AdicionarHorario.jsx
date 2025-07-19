@@ -1,122 +1,170 @@
-import React, { useState, useEffect, useRef } from 'react';
-import DatePicker, { registerLocale } from 'react-datepicker';
-import ptBR from 'date-fns/locale/pt-BR';
-
-import 'react-datepicker/dist/react-datepicker.css';
-import './AdicionarHorario.css';
-
-registerLocale('pt-BR', ptBR);
+import React, { useState, useEffect } from "react";
+import api from "../../services/api";
+import "./AdicionarHorario.css";
 
 const AdicionarHorario = () => {
-  const [dataInicio, setDataInicio] = useState(null);
-  const [dataFim, setDataFim] = useState(null);
-  const [local, setLocal] = useState('');
-  const [mensagemSucesso, setMensagemSucesso] = useState('');
-  
-  const timerRef = useRef(null);
+  // Estados para os campos do formulário
+  const [disciplina, setDisciplina] = useState("");
+  const [diaSemana, setDiaSemana] = useState("");
+  const [horaInicio, setHoraInicio] = useState("");
+  const [horaFim, setHoraFim] = useState("");
+  const [local, setLocal] = useState("");
 
+  // Estados para carregar as disciplinas da API
+  const [disciplinas, setDisciplinas] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Estados para feedback ao usuário
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Busca a lista de disciplinas da API quando o componente é montado
   useEffect(() => {
-    return () => {
-      clearTimeout(timerRef.current);
+    const fetchDisciplinas = async () => {
+      try {
+        const response = await api.get("/disciplinas/");
+        setDisciplinas(response.data);
+      } catch (err) {
+        setError("Não foi possível carregar as disciplinas.", err);
+      } finally {
+        setIsLoading(false);
+      }
     };
+    fetchDisciplinas();
   }, []);
 
-  const handleSubmit = (event) => {
-    event.preventDefault(); 
-    setMensagemSucesso('');
-    clearTimeout(timerRef.current); // Limpa qualquer timer anterior
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    setSuccessMessage("");
 
-    if (!dataInicio || !dataFim || !local) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
-      return;
-    }
-    
-    if (dataFim <= dataInicio) {
-      alert('Erro: O horário de fim deve ser posterior ao horário de início.');
+    // Validação simples no front-end
+    if (horaFim <= horaInicio) {
+      setError("O horário de fim deve ser posterior ao horário de início.");
       return;
     }
 
-    setMensagemSucesso('Horário salvo com sucesso!');
+    const payload = {
+      disciplina: disciplina,
+      dia_semana: diaSemana,
+      hora_inicio: horaInicio,
+      hora_fim: horaFim,
+      local: local,
+    };
 
-    // Limpa os campos do formulário
-    setDataInicio(null);
-    setDataFim(null);
-    setLocal('');
-    
-    timerRef.current = setTimeout(() => {
-      setMensagemSucesso('');
-    }, 4000);
+    try {
+      // Fazendo a requisição POST para o endpoint de criação de horários
+      await api.post("/horarios/", payload);
+      setSuccessMessage("Horário cadastrado com sucesso!");
+
+      // Limpa o formulário
+      setDisciplina("");
+      setDiaSemana("");
+      setHoraInicio("");
+      setHoraFim("");
+      setLocal("");
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.detail ||
+        "Erro ao cadastrar horário. Verifique os dados.";
+      setError(errorMessage);
+    }
   };
+
+  if (isLoading) {
+    return <div className="form-container">Carregando...</div>;
+  }
 
   return (
     <div className="form-container">
-      <h1 className="form-title">Adicionar Horário</h1>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="time-inputs-container">
-          <div className="input-group">
-            <label htmlFor="horario-inicio">Horário de Início</label>
-            <DatePicker
-              id="horario-inicio"
-              selected={dataInicio}
-              onChange={(date) => {
-                setDataInicio(date);
-                setDataFim(null);
-              }}
-              selectsStart
-              startDate={dataInicio}
-              endDate={dataFim}
-              minDate={new Date()}
-              showTimeSelect
-              locale="pt-BR"
-              dateFormat="dd/MM/yyyy, HH:mm"
-              timeFormat="HH:mm"
-              placeholderText="Selecione data e hora"
-              autoComplete="off"
-            />
-          </div>
-          <div className="input-group">
-            <label htmlFor="horario-fim">Horário de Fim</label>
-            <DatePicker
-              id="horario-fim"
-              selected={dataFim}
-              onChange={(date) => setDataFim(date)}
-              selectsEnd
-              startDate={dataInicio}
-              endDate={dataFim}
-              minDate={dataInicio}
-              showTimeSelect={!!dataInicio}
-              locale="pt-BR"
-              dateFormat="dd/MM/yyyy, HH:mm"
-              placeholderText={dataInicio ? "Selecione data e hora" : "Selecione o início primeiro"}
-              autoComplete="off"
-              disabled={!dataInicio}
-            />
-          </div>
-        </div>
+      <h1 className="form-title">Adicionar Horário Semanal</h1>
 
-        <div className="input-group dropdown-group">
-          <label htmlFor="local">Local</label>
-          <select id="local" value={local} onChange={(e) => setLocal(e.target.value)}>
-            <option value="" disabled>Insira o Local</option>
-            <option value="Sala de Reuniões 1">Sala de Reuniões 1</option>
-            <option value="Sala de Reuniões 2">Sala de Reuniões 2</option>
-            <option value="Auditório Principal">Auditório Principal</option>
-            <option value="Laboratório de Inovação">Laboratório de Inovação</option>
-            <option value="Espaço Café">Espaço Café</option>
+      <form onSubmit={handleSubmit}>
+        {/* Dropdown para Disciplinas */}
+        <div className="input-group">
+          <label htmlFor="disciplina">Disciplina</label>
+          <select
+            id="disciplina"
+            value={disciplina}
+            onChange={(e) => setDisciplina(e.target.value)}
+            required
+          >
+            <option value="" disabled>
+              Selecione a disciplina
+            </option>
+            {disciplinas.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.nome} ({d.codigo})
+              </option>
+            ))}
           </select>
         </div>
 
-        <button type="submit" className="btn btn-primary btn-salvar">
-          Salvar
-        </button>
-      </form>
-      
-      {mensagemSucesso && (
-        <div className="mensagem-sucesso"> 
-          {mensagemSucesso}
+        {/* Dropdown para Dia da Semana */}
+        <div className="input-group">
+          <label htmlFor="dia-semana">Dia da Semana</label>
+          <select
+            id="dia-semana"
+            value={diaSemana}
+            onChange={(e) => setDiaSemana(e.target.value)}
+            required
+          >
+            <option value="" disabled>
+              Selecione o dia
+            </option>
+            <option value="Segunda-feira">Segunda-feira</option>
+            <option value="Terça-feira">Terça-feira</option>
+            <option value="Quarta-feira">Quarta-feira</option>
+            <option value="Quinta-feira">Quinta-feira</option>
+            <option value="Sexta-feira">Sexta-feira</option>
+            <option value="Sábado">Sábado</option>
+          </select>
         </div>
-      )}
+
+        {/* Inputs de Horário */}
+        <div className="time-inputs-container">
+          <div className="input-group">
+            <label htmlFor="hora-inicio">Hora de Início</label>
+            <input
+              type="time"
+              id="hora-inicio"
+              value={horaInicio}
+              onChange={(e) => setHoraInicio(e.target.value)}
+              required
+            />
+          </div>
+          <div className="input-group">
+            <label htmlFor="hora-fim">Hora de Fim</label>
+            <input
+              type="time"
+              id="hora-fim"
+              value={horaFim}
+              onChange={(e) => setHoraFim(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+
+        {/* Input de Texto para Local */}
+        <div className="input-group">
+          <label htmlFor="local">Local</label>
+          <input
+            type="text"
+            id="local"
+            placeholder="Ex: Sala 201, Bloco B"
+            value={local}
+            onChange={(e) => setLocal(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Botão e Mensagens de Feedback */}
+        <button type="submit" className="btn btn-primary btn-salvar">
+          Salvar Horário
+        </button>
+        {successMessage && <p className="mensagem-sucesso">{successMessage}</p>}
+        {error && <p className="mensagem-erro">{error}</p>}
+      </form>
     </div>
   );
 };
