@@ -1,31 +1,73 @@
+/* --- Estilos Padrão (Mobile First) --- */
 .sidebar {
+  position: fixed;
+  top: 0;
+  left: -300px; /* Começa escondida fora da tela */
   width: 280px;
-  flex-shrink: 0;
+  height: 100vh;
+  z-index: 1000;
   background-color: #f8f9fa;
   border-right: 1px solid #e0e0e0;
-  height: 100vh;
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
+  transition: left 0.3s ease-in-out;
 }
 
+.sidebar.open {
+  left: 0;
+}
+
+.mobile-menu-toggle {
+  display: block;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 999;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.sidebar-close-btn {
+  display: block;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #555;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  cursor: pointer;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+/* Estilos internos da sidebar (perfil, nav, etc.) */
 .sidebar-profile {
+  margin-top: 3rem; /* Espaço para o botão de fechar */
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid #e0e0e0;
   display: flex;
   align-items: center;
+  gap: 1rem;
 }
 
-.sidebar-profile h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: #333;
-}
-
+.sidebar-profile h3,
 .sidebar-profile p {
   margin: 0;
-  color: #666;
 }
 
 .sidebar-nav {
@@ -42,6 +84,7 @@
   display: flex;
   align-items: center;
   padding: 0.8rem 1rem;
+  margin-bottom: 0.5rem;
   text-decoration: none;
   color: #333;
   border-radius: 8px;
@@ -58,8 +101,6 @@
 .sidebar-icon {
   margin-right: 0.8rem;
   font-size: 1.2rem;
-  color: #4a5568;
-  flex-shrink: 0;
 }
 
 .profile-icon {
@@ -70,36 +111,39 @@
   margin-top: auto;
 }
 
-.delete-account {
+.logout-button {
+  width: 100%;
   display: flex;
   align-items: center;
-  color: #d9534f;
-  text-decoration: none;
-  font-weight: 500;
+  background: transparent;
+  border: none;
   padding: 0.8rem 1rem;
   border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #d9534f;
+  cursor: pointer;
   transition: background-color 0.3s;
 }
 
-.delete-account:hover {
+.logout-button:hover {
   background-color: #f8d7da;
 }
 
-/* Responsividade */
-@media (max-width: 768px) {
+/* --- Estilos para Telas Maiores (Desktop) --- */
+@media (min-width: 769px) {
   .sidebar {
-    width: 100%;
-    height: auto;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    border-right: none;
-    border-bottom: 1px solid #e0e0e0;
+    position: static; /* Volta a fazer parte do layout normal */
+    left: 0;
+    height: 100vh;
   }
-  .sidebar-nav ul {
-    display: flex;
-  }
-  .sidebar-footer {
+  .mobile-menu-toggle,
+  .sidebar-close-btn,
+  .overlay {
     display: none;
+  }
+
+  .sidebar-profile {
+    margin-top: 0; /* Reseta a margem */
   }
 }

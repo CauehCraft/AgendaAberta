@@ -121,3 +121,14 @@
     flex-basis: 100%; /* Faz o formulário ocupar toda a largura */
   }
 }
+
+.error-message {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #fecaca; /* Vermelho claro (borda) */
+  background-color: #fef2f2; /* Vermelho muito claro (fundo) */
+  color: #b91c1c; /* Vermelho escuro (texto) */
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+}
