@@ -14,6 +14,7 @@ const Cadastro = () => {
   });
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
 
   const validateField = (name, value) => {
@@ -33,6 +34,10 @@ const Cadastro = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    // Limpa o erro do backend ao digitar e valida em tempo real
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: null });
+    }
     const fieldError = validateField(name, value);
     setErrors({ ...errors, [name]: fieldError });
   };
@@ -40,26 +45,41 @@ const Cadastro = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError("");
+    setSuccessMessage("");
+    setErrors({}); // Limpa todos os erros antes de um novo envio
 
+    // Revalida todos os campos antes de enviar
+    let hasFrontEndErrors = false;
+    const currentErrors = {};
     for (const key in formData) {
       const fieldError = validateField(key, formData[key]);
       if (fieldError) {
-        setErrors((prev) => ({ ...prev, [key]: fieldError }));
-        return;
+        currentErrors[key] = fieldError;
+        hasFrontEndErrors = true;
       }
+    }
+    if (hasFrontEndErrors) {
+      setErrors(currentErrors);
+      return;
     }
 
     try {
       await api.post("/register/", formData);
-      alert(
-        "Cadastro realizado com sucesso! Você será redirecionado para o login."
+      setSuccessMessage(
+        "Cadastro realizado com sucesso! Redirecionando para o login..."
       );
-      navigate("/login");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err) {
-      const backendErrors = err.response?.data;
-      if (backendErrors) {
-        setErrors(backendErrors);
+      const backendResponse = err.response?.data;
+      if (backendResponse && backendResponse.errors) {
+        // Agora pegamos o objeto que está DENTRO de 'errors'
+        // console.log("Erros de validação específicos:", backendResponse.errors);
+        setErrors(backendResponse.errors);
       } else {
+        // Se a estrutura do erro for diferente, mostramos uma mensagem genérica
         setApiError("Ocorreu um erro inesperado. Tente novamente.");
       }
     }
@@ -69,7 +89,10 @@ const Cadastro = () => {
     <div className="form-container-wrapper">
       <div className="form-box">
         <h1>Crie sua Conta</h1>
+
         {apiError && <p className="api-error-message">{apiError}</p>}
+        {successMessage && <p className="success-message">{successMessage}</p>}
+
         <form onSubmit={handleSubmit} noValidate>
           <div className="input-group">
             <label htmlFor="first_name">Nome</label>
@@ -143,7 +166,7 @@ const Cadastro = () => {
               <option value="monitor">Monitor</option>
             </select>
           </div>
-          <button type="submit" className="btn-primary">
+          <button type="submit" className="btn btn-primary">
             Cadastrar
           </button>
           <div className="form-link">
