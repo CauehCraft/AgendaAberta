@@ -1,15 +1,45 @@
 from rest_framework import serializers
 from django.utils import timezone
+from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser, Disciplina, Horario
 
 class UserSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email', 'password', 'tipo')
+        fields = ('id', 'username', 'email', 'password', 'tipo', 'first_name', 'last_name')
         extra_kwargs = {'password': {'write_only': True}}
 
+    def validate_username(self, value):
+        if ' ' in value:
+            raise serializers.ValidationError("O nome de usuário não pode conter espaços.")
+        if CustomUser.objects.filter(username__iexact=value).exists():
+            raise serializers.ValidationError("Este nome de usuário já está em uso.")
+        return value
+
+    def validate_email(self, value):
+        email = value.lower()
+        if not (email.endswith('@ufersa.edu.br') or email.endswith('@alunos.ufersa.edu.br')):
+            raise serializers.ValidationError("O email deve ser de um domínio da UFERSA (@ufersa.edu.br ou @alunos.ufersa.edu.br).")
+        if CustomUser.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError("Este endereço de email já está em uso.")
+        return email
+
+    def validate_password(self, value):
+        validate_password(value)
+        return value
+
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(**validated_data)
+        user = CustomUser.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            tipo=validated_data['tipo'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
+        )
         return user
 
 class UserBasicSerializer(serializers.ModelSerializer):

@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { useAuth } from '../../hooks/useAuth'; // hook de autenticação
-import { useNavigate } from 'react-router-dom';
-import './Login.css';
-import loginImage from '../../assets/imagem-login.png'; 
+import { useState } from "react";
+import { useAuth } from "../../hooks/useAuth"; // hook de autenticação
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import "./Login.css";
+import loginImage from "../../assets/imagem-login.png";
 
 const Login = () => {
   // Cria estados para os campos do formulário
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -18,9 +19,9 @@ const Login = () => {
     setError(null);
     try {
       await login(username, password);
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (err) {
-      setError('Falha no login. Verifique seu usuário e senha.');
+      setError("Falha no login. Verifique seu usuário e senha.");
       console.error("Erro de login:", err);
     }
   };
@@ -31,7 +32,7 @@ const Login = () => {
         <div className="login-form">
           <h1>Bem-vindo(a)</h1>
           {error && <p className="error-message">{error}</p>}
-          
+
           <form onSubmit={handleSubmit}>
             <div className="input-group">
               <label htmlFor="username">Usuário</label>
@@ -55,13 +56,15 @@ const Login = () => {
                 required
               />
             </div>
-            
+
             <button type="submit" className="btn btn-primary">
               Entrar
             </button>
-            <button type="button" className="btn btn-secondary">
-              Cadastrar
-            </button>
+            <div className="form-link">
+              <p>
+                Ainda não tem uma conta? <Link to="/cadastro">Cadastre-se</Link>
+              </p>
+            </div>
           </form>
         </div>
       </div>
