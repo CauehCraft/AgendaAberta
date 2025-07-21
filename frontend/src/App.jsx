@@ -12,40 +12,39 @@ import EditarHorario from "./pages/EditarHorario/EditarHorario";
 import VisualizarAgenda from "./pages/VisualizarAgenda/VisualizarAgenda";
 import Welcome from "./pages/Welcome/Welcome";
 import { AuthProvider } from "./context/AuthProvider";
+import { useAuth } from "./hooks/useAuth";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 
-function App() {
-  const isAuthenticated = true;
+// componente simples para o redirecionamento inicial
+const Root = () => {
+  const { user } = useAuth();
+  return <Navigate to={user ? "/dashboard" : "/login"} />;
+};
 
+function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
-          {/* ROTA PROTEGIDA */}
+
+          {/* ROTAS PROTEGIDAS */}
           <Route element={<ProtectedRoute />}>
-            <Route
-              path="/dashboard"
-              element={
-                isAuthenticated ? <Dashboard /> : <Navigate to="/login" />
-              }
-            >
+            <Route path="/dashboard" element={<Dashboard />}>
               <Route index element={<Welcome />} />
               <Route path="adicionar-horario" element={<AdicionarHorario />} />
+              <Route
+                path="editar-horario/:horarioId"
+                element={<EditarHorario />}
+              />{" "}
               <Route path="editar-horario" element={<EditarHorario />} />
               <Route path="visualizar-agenda" element={<VisualizarAgenda />} />
             </Route>
           </Route>
 
-          <Route
-            path="/"
-            element={
-              <Navigate
-                to={isAuthenticated ? "/dashboard/adicionar-horario" : "/login"}
-              />
-            }
-          />
+          {/* Rota inicial que usa o componente Root para decidir o redirecionamento */}
+          <Route path="/" element={<Root />} />
         </Routes>
       </Router>
     </AuthProvider>
