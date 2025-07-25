@@ -14,18 +14,27 @@ const AdicionarHorario = () => {
   const [disciplinas, setDisciplinas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Estados para feedback ao usuário
-  const [error, setError] = useState("");
+  // Estado de erros aprimorado (permanece o mesmo)
+  const [errors, setErrors] = useState({
+    disciplina: null,
+    dia_semana: null,
+    hora_inicio: null,
+    hora_fim: null,
+    local: null,
+    non_field_errors: null,
+  });
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Busca a lista de disciplinas da API quando o componente é montado
   useEffect(() => {
     const fetchDisciplinas = async () => {
       try {
         const response = await api.get("/disciplinas/");
         setDisciplinas(response.data);
       } catch (err) {
-        setError("Não foi possível carregar as disciplinas.", err);
+        setErrors({
+          non_field_errors: "Não foi possível carregar as disciplinas.",
+        });
+        console.error("Erro ao carregar disciplinas:", err);
       } finally {
         setIsLoading(false);
       }
@@ -35,41 +44,56 @@ const AdicionarHorario = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError("");
     setSuccessMessage("");
-
-    // Validação simples no front-end
-    if (horaFim <= horaInicio) {
-      setError("O horário de fim deve ser posterior ao horário de início.");
-      return;
-    }
+    setErrors({
+      disciplina: null,
+      dia_semana: null,
+      hora_inicio: null,
+      hora_fim: null,
+      local: null,
+      non_field_errors: null,
+    });
 
     const payload = {
-      disciplina: disciplina,
+      disciplina,
       dia_semana: diaSemana,
       hora_inicio: horaInicio,
       hora_fim: horaFim,
-      local: local,
+      local,
     };
 
     try {
-      // Fazendo a requisição POST para o endpoint de criação de horários
       await api.post("/horarios/", payload);
       setSuccessMessage("Horário cadastrado com sucesso!");
-
-      // Limpa o formulário
       setDisciplina("");
       setDiaSemana("");
       setHoraInicio("");
       setHoraFim("");
       setLocal("");
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.detail ||
-        "Erro ao cadastrar horário. Verifique os dados.";
-      setError(errorMessage);
+      if (err.response && err.response.data && err.response.data.errors) {
+        const backendErrors = err.response.data.errors;
+        // console.error("Erros recebidos do backend:", backendErrors);
+        const newErrors = {};
+        for (const field in backendErrors) {
+          newErrors[field] = backendErrors[field];
+        }
+        setErrors(newErrors);
+      } else if (
+        err.response &&
+        err.response.data &&
+        err.response.data.message
+      ) {
+        setErrors({ non_field_errors: err.response.data.message });
+      } else {
+        setErrors({
+          non_field_errors: "Ocorreu um erro de comunicação. Tente novamente.",
+        });
+      }
     }
   };
+
+  const errorMessages = Object.values(errors).filter((error) => error !== null);
 
   if (isLoading) {
     return <div className="form-container">Carregando...</div>;
@@ -78,7 +102,6 @@ const AdicionarHorario = () => {
   return (
     <div className="form-container">
       <h1 className="form-title">Adicionar Horário Semanal</h1>
-
       <form onSubmit={handleSubmit}>
         {/* Dropdown para Disciplinas */}
         <div className="input-group">
@@ -162,8 +185,20 @@ const AdicionarHorario = () => {
         <button type="submit" className="btn btn-primary btn-salvar">
           Salvar Horário
         </button>
-        {successMessage && <p className="mensagem-sucesso">{successMessage}</p>}
-        {error && <p className="mensagem-erro">{error}</p>}
+
+        {successMessage && (
+          <div className="mensagem-sucesso">{successMessage}</div>
+        )}
+
+        {/* Bloco para exibir TODAS as mensagens de erro */}
+        {errorMessages.length > 0 && (
+          <div className="mensagem-erro">
+            {/* Mapeia cada mensagem de erro para um parágrafo */}
+            {errorMessages.map((msg, index) => (
+              <p key={index}>{msg}</p>
+            ))}
+          </div>
+        )}
       </form>
     </div>
   );
