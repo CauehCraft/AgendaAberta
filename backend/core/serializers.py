@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.utils import timezone
 from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser, Disciplina, Horario
+from .utils import humanize_time_since
 
 class UserSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=True)
@@ -130,23 +131,7 @@ class HorarioDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
     
     def get_tempo_desde_atualizacao(self, obj):
-        """Retorna o tempo desde a última atualização em formato legível"""
-        agora = timezone.now()
-        diferenca = agora - obj.ultima_atualizacao
-        
-        # Converter para dias, horas, minutos
-        dias = diferenca.days
-        horas = diferenca.seconds // 3600
-        minutos = (diferenca.seconds % 3600) // 60
-        
-        if dias > 0:
-            return f"{dias} dia(s) atrás"
-        elif horas > 0:
-            return f"{horas} hora(s) atrás"
-        elif minutos > 0:
-            return f"{minutos} minuto(s) atrás"
-        else:
-            return "Agora mesmo"
+        return humanize_time_since(obj.ultima_atualizacao)
 
 
 class HorarioPublicSerializer(serializers.ModelSerializer):
@@ -172,22 +157,6 @@ class HorarioPublicSerializer(serializers.ModelSerializer):
         return obj.professor_monitor.username
     
     def get_ultima_atualizacao_formatada(self, obj):
-        """Retorna a data de última atualização em formato legível"""
-        agora = timezone.now()
-        diferenca = agora - obj.ultima_atualizacao
-        
-        # Converter para dias, horas, minutos
-        dias = diferenca.days
-        horas = diferenca.seconds // 3600
-        minutos = (diferenca.seconds % 3600) // 60
-        
-        if dias > 0:
-            return f"{dias} dia(s) atrás"
-        elif horas > 0:
-            return f"{horas} hora(s) atrás"
-        elif minutos > 0:
-            return f"{minutos} minuto(s) atrás"
-        else:
-            return "Agora mesmo"
+        return humanize_time_since(obj.ultima_atualizacao)
 
 
