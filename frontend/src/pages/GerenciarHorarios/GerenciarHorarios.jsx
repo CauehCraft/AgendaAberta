@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // useNavigate será útil para o botão de editar no futuro
+import { useNavigate } from "react-router-dom";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import api from "../../services/api";
 import "./GerenciarHorarios.css";
 import ModalConfirmacao from "../../components/ModalConfirmacao/ModalConfirmacao";
 
 const GerenciarHorarios = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [horarios, setHorarios] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,8 +44,8 @@ const GerenciarHorarios = () => {
 
   const handleEdit = (id) => {
     // A lógica para editar será implementada no futuro
-    alert(`(Futuro) Editar item com ID: ${id}`);
-    // navigate(`/dashboard/editar-horario/${id}`);
+    // alert(`(Futuro) Editar item com ID: ${id}`);
+    navigate(`/dashboard/gerenciar-horarios/${id}`);
   };
 
   const handleOpenDeleteModal = (id) => {

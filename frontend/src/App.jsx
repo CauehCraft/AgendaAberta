@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import AdicionarHorario from "./pages/AdicionarHorario/AdicionarHorario";
 import GerenciarHorarios from "./pages/GerenciarHorarios/GerenciarHorarios";
 import VisualizarAgenda from "./pages/VisualizarAgenda/VisualizarAgenda";
+import EditarHorario from "./pages/EditarHorario/EditarHorario";
 import Welcome from "./pages/Welcome/Welcome";
 import { AuthProvider } from "./context/AuthProvider";
 import { useAuth } from "./hooks/useAuth";
@@ -36,7 +37,7 @@ function App() {
               <Route path="adicionar-horario" element={<AdicionarHorario />} />
               <Route
                 path="gerenciar-horarios/:horarioId"
-                element={<GerenciarHorarios />}
+                element={<EditarHorario />}
               />{" "}
               <Route
                 path="gerenciar-horarios"
