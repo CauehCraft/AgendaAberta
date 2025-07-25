@@ -178,10 +178,10 @@ class HorarioViewSet(viewsets.ModelViewSet):
                 )
             raise
 
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class HorarioPublicViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ViewSet para visualização pública de horários, sem necessidade de autenticação.
-    Permite apenas operações de leitura (list, retrieve).
+    ViewSet para visualização pública de horários, com cache e filtros otimizados.
     """
     queryset = Horario.objects.filter(ativo=True).select_related('disciplina', 'professor_monitor')
     serializer_class = HorarioPublicSerializer
@@ -190,8 +190,7 @@ class HorarioPublicViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = HorarioFilter
     search_fields = ['disciplina__nome', 'disciplina__codigo', 'professor_monitor__username', 'local']
     ordering_fields = ['dia_semana', 'hora_inicio', 'hora_fim', 'ultima_atualizacao']
-    
-    @method_decorator(cache_page(60 * 15))  # Cache por 15 minutos
+
     def list(self, request, *args, **kwargs):
         """Adiciona mensagem informativa sobre o propósito do sistema"""
         response = super().list(request, *args, **kwargs)
@@ -212,39 +211,8 @@ class HorarioPublicViewSet(viewsets.ReadOnlyModelViewSet):
         if isinstance(response.data, dict):
             response.data['message'] = "Este sistema é apenas para visualização de horários disponíveis, não para agendamento."
         return response
+
     
-    def get_queryset(self):
-        """Aplica filtros customizados ao queryset"""
-        queryset = super().get_queryset()
-        
-        # Filtrar por curso
-        curso = self.request.query_params.get('curso')
-        if curso:
-            queryset = queryset.filter(disciplina__curso__icontains=curso)
-        
-        # Filtrar por disciplina
-        disciplina_id = self.request.query_params.get('disciplina')
-        if disciplina_id:
-            try:
-                queryset = queryset.filter(disciplina_id=int(disciplina_id))
-            except (ValueError, TypeError):
-                pass
-        
-        # Filtrar por professor/monitor
-        professor = self.request.query_params.get('professor')
-        if professor:
-            queryset = queryset.filter(professor_monitor__username__icontains=professor)
-        
-        # Filtrar por dia da semana
-        dia_semana = self.request.query_params.get('dia_semana')
-        if dia_semana:
-            queryset = queryset.filter(dia_semana=dia_semana)
-        
-        return queryset
-
-
-
-
 class DisciplinaViewSet(viewsets.ModelViewSet):
     queryset = Disciplina.objects.all()
     serializer_class = DisciplinaSerializer
