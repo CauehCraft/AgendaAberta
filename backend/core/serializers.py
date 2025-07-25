@@ -1,8 +1,9 @@
 from rest_framework import serializers
-from django.utils import timezone
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser, Disciplina, Horario
 from .utils import humanize_time_since
+from .validators import HorarioValidator
 
 class UserSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=True)
@@ -60,9 +61,13 @@ class DisciplinaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class HorarioSerializer(serializers.ModelSerializer):
+    """
+    Serializer para criar e atualizar horários.
+    Agora centraliza toda a lógica de validação de dados chamando HorarioValidator.
+    """
     class Meta:
         model = Horario
-        # ALTERAÇÃO 1: Trocado '__all__' por uma lista explícita de campos.
+        # Lista explícita de campos é uma boa prática
         fields = [
             'id', 
             'disciplina', 
@@ -70,38 +75,53 @@ class HorarioSerializer(serializers.ModelSerializer):
             'hora_inicio', 
             'hora_fim', 
             'local', 
-            'professor_monitor', 
+            'professor_monitor', # Será preenchido automaticamente pela view
             'ativo', 
             'ultima_atualizacao', 
             'data_criacao'
         ]
-        # ALTERAÇÃO 2: Informar que 'professor_monitor' é um campo apenas de leitura.
+        # Garante que o usuário não pode atribuir um horário a outra pessoa
         read_only_fields = ['professor_monitor']
 
     def validate(self, data):
+        """
+        Método de validação centralizado. É executado em operações de create e update.
+        """
+        # O DRF passa a instância (em updates) e o contexto (que contém a request)
         instance = self.instance
-        professor_monitor = data.get('professor_monitor', getattr(instance, 'professor_monitor', None))
+        user = self.context['request'].user
+
+        # Coleta os dados para validação, usando os novos dados ou os da instância existente
+        disciplina = data.get('disciplina', getattr(instance, 'disciplina', None))
+        local = data.get('local', getattr(instance, 'local', None))
         dia_semana = data.get('dia_semana', getattr(instance, 'dia_semana', None))
         hora_inicio = data.get('hora_inicio', getattr(instance, 'hora_inicio', None))
         hora_fim = data.get('hora_fim', getattr(instance, 'hora_fim', None))
+        
+        # --- ETAPA 1: Validar campos obrigatórios ---
+        try:
+            HorarioValidator.validate_required_fields(disciplina=disciplina, local=local)
+        except DjangoValidationError as e:
+            # Converte o erro padrão do Django para um erro do DRF para consistência na API
+            raise serializers.ValidationError(e.message_dict)
 
+        # --- ETAPA 2: Validar a ordem cronológica das horas ---
         if hora_inicio and hora_fim and hora_inicio >= hora_fim:
-            raise serializers.ValidationError("A hora de início deve ser anterior à hora de fim.")
+            raise serializers.ValidationError({"hora_fim": "A hora de fim deve ser posterior à hora de início."})
 
-        if professor_monitor and dia_semana and hora_inicio and hora_fim:
-            qs = Horario.objects.filter(
-                professor_monitor=professor_monitor,
-                dia_semana=dia_semana,
-                hora_inicio__lt=hora_fim,
-                hora_fim__gt=hora_inicio
-            )
-            if instance:
-                qs = qs.exclude(pk=instance.pk)
-            
-            if qs.exists():
-                raise serializers.ValidationError("Conflito de horário. Você já possui um horário neste intervalo.")
+        # --- ETAPA 3: Validar conflito de horário para o próprio professor/monitor ---
+        exclude_id = instance.id if instance else None
+        if not HorarioValidator.validate_schedule_conflict(
+            professor=user,
+            dia_semana=dia_semana,
+            hora_inicio=hora_inicio,
+            hora_fim=hora_fim,
+            exclude_id=exclude_id
+        ):
+            # Este é um erro geral, não específico de um campo
+            raise serializers.ValidationError("Conflito de horário. Você já possui um atendimento neste intervalo.")
 
-        local = data.get('local', getattr(instance, 'local', None))
+        # --- ETAPA 4: Validar conflito de uso da sala/local ---
         if local and dia_semana and hora_inicio and hora_fim:
             conflito_de_sala = Horario.objects.filter(
                 local=local,
@@ -114,9 +134,10 @@ class HorarioSerializer(serializers.ModelSerializer):
             
             if conflito_de_sala.exists():
                 raise serializers.ValidationError(
-                    "Conflito de agendamento: Esta sala já está reservada neste mesmo horário por outro professor/monitor."
+                    {"local": "Conflito de agendamento: Esta sala já está reservada neste mesmo horário."}
                 )
         
+        # Se todas as validações passaram, retorna os dados
         return data
 
 
