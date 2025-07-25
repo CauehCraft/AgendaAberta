@@ -7,7 +7,7 @@ const EditarHorario = () => {
   const { horarioId } = useParams();
   const navigate = useNavigate();
 
-  // Estados para o formulário e para o feedback
+  // Estados para o formulário
   const [formData, setFormData] = useState({
     disciplina: "",
     dia_semana: "",
@@ -17,8 +17,16 @@ const EditarHorario = () => {
   });
   const [disciplinas, setDisciplinas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const [errors, setErrors] = useState({
+    disciplina: null,
+    dia_semana: null,
+    hora_inicio: null,
+    hora_fim: null,
+    local: null,
+    non_field_errors: null,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,7 +45,9 @@ const EditarHorario = () => {
           local: horarioData.local,
         });
       } catch (err) {
-        setError("Não foi possível carregar os dados para edição.");
+        setErrors({
+          non_field_errors: "Não foi possível carregar os dados para edição.",
+        });
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -54,21 +64,49 @@ const EditarHorario = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError("");
     setSuccessMessage("");
+    // Limpa os erros antigos antes de cada submissão
+    setErrors({
+      disciplina: null,
+      dia_semana: null,
+      hora_inicio: null,
+      hora_fim: null,
+      local: null,
+      non_field_errors: null,
+    });
 
     try {
+      // Usamos PATCH para atualizações parciais, o que é uma boa prática.
       await api.patch(`/horarios/${horarioId}/`, formData);
       setSuccessMessage("Horário atualizado com sucesso! Redirecionando...");
 
       setTimeout(() => navigate("/dashboard/gerenciar-horarios"), 2000);
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.detail || "Erro ao atualizar horário.";
-      setError(errorMessage);
-      console.error(err);
+      // Lógica para extrair e exibir erros específicos do backend
+      if (err.response && err.response.data && err.response.data.errors) {
+        const backendErrors = err.response.data.errors;
+        const newErrors = {};
+        for (const field in backendErrors) {
+          newErrors[field] = backendErrors[field];
+        }
+        setErrors(newErrors);
+      } else if (
+        err.response &&
+        err.response.data &&
+        err.response.data.message
+      ) {
+        setErrors({ non_field_errors: err.response.data.message });
+      } else {
+        // Erro de rede ou outro problema não relacionado à validação
+        setErrors({
+          non_field_errors:
+            "Ocorreu um erro de comunicação ao salvar as alterações.",
+        });
+      }
     }
   };
+
+  const errorMessages = Object.values(errors).filter((error) => error !== null);
 
   if (isLoading) {
     return (
@@ -82,6 +120,7 @@ const EditarHorario = () => {
     <div className="form-container">
       <h1 className="form-title">Editar Horário</h1>
       <form onSubmit={handleSubmit}>
+        {/* Campo Disciplina */}
         <div className="input-group">
           <label htmlFor="disciplina">Disciplina</label>
           <select
@@ -102,6 +141,7 @@ const EditarHorario = () => {
           </select>
         </div>
 
+        {/* Campo Dia da Semana */}
         <div className="input-group">
           <label htmlFor="dia_semana">Dia da Semana</label>
           <select
@@ -123,6 +163,7 @@ const EditarHorario = () => {
           </select>
         </div>
 
+        {/* Campos de Horário */}
         <div className="time-inputs-container">
           <div className="input-group">
             <label htmlFor="hora_inicio">Hora de Início</label>
@@ -148,6 +189,7 @@ const EditarHorario = () => {
           </div>
         </div>
 
+        {/* Campo Local */}
         <div className="input-group">
           <label htmlFor="local">Local</label>
           <input
@@ -161,11 +203,23 @@ const EditarHorario = () => {
           />
         </div>
 
+        {/* Botão e Mensagens de Feedback */}
         <button type="submit" className="btn btn-primary btn-salvar">
           Salvar Alterações
         </button>
-        {successMessage && <p className="mensagem-sucesso">{successMessage}</p>}
-        {error && <p className="mensagem-erro">{error}</p>}
+
+        {successMessage && (
+          <div className="mensagem-sucesso">{successMessage}</div>
+        )}
+
+        {/* Bloco para exibir TODAS as mensagens de erro */}
+        {errorMessages.length > 0 && (
+          <div className="mensagem-erro">
+            {errorMessages.map((msg, index) => (
+              <p key={index}>{msg}</p>
+            ))}
+          </div>
+        )}
       </form>
     </div>
   );
