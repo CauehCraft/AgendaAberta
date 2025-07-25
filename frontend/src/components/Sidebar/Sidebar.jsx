@@ -58,9 +58,9 @@ const Sidebar = () => {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/dashboard/editar-horario" onClick={toggleMenu}>
+              <NavLink to="/dashboard/gerenciar-horarios" onClick={toggleMenu}>
                 <FaEdit className="sidebar-icon" />
-                <span>Editar/Deletar Horário</span>
+                <span>Gerenciar horários</span>
               </NavLink>
             </li>
             <li>
