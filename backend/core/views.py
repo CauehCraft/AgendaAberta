@@ -60,9 +60,10 @@ class HorarioViewSet(viewsets.ModelViewSet):
         serializer.save()
     
     def perform_destroy(self, instance):
-        if not HorarioValidator.validate_future_schedule(horario_instance=instance):
-            raise ValidationError("Não é possível excluir um horário que já ocorreu.")
-        
+        """
+        Exclui a instância do horário sem nenhuma validação de data,
+        pois os horários são fixos na grade semanal.
+        """
         instance.delete()
 
     def create(self, request, *args, **kwargs):
