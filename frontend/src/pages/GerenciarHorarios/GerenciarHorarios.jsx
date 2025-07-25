@@ -109,24 +109,27 @@ const GerenciarHorarios = () => {
         <tbody>
           {currentItems.map((horario) => (
             <tr key={horario.id}>
-              <td>{horario.dia_semana}</td>
-              <td>{horario.disciplina.nome}</td>
-              <td>{horario.hora_inicio}</td>
-              <td>{horario.hora_fim}</td>
-              <td>{horario.local}</td>
-              <td className="actions-cell">
-                <button
-                  onClick={() => handleEdit(horario.id)}
-                  className="action-btn edit-btn"
-                >
-                  <FaEdit /> Editar
-                </button>
-                <button
-                  onClick={() => handleOpenDeleteModal(horario.id)}
-                  className="action-btn delete-btn"
-                >
-                  <FaTrashAlt /> Excluir
-                </button>
+              <td data-label="Dia da Semana">{horario.dia_semana}</td>
+              <td data-label="Disciplina">{horario.disciplina.nome}</td>
+              <td data-label="Início">{horario.hora_inicio}</td>
+              <td data-label="Término">{horario.hora_fim}</td>
+              <td data-label="Local">{horario.local}</td>
+              <td data-label="Ações">
+                <div className="actions-cell">
+                  {" "}
+                  <button
+                    onClick={() => handleEdit(horario.id)}
+                    className="action-btn edit-btn"
+                  >
+                    <FaEdit /> Editar
+                  </button>
+                  <button
+                    onClick={() => handleOpenDeleteModal(horario.id)}
+                    className="action-btn delete-btn"
+                  >
+                    <FaTrashAlt /> Excluir
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
