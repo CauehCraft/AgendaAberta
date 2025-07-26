@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { getDay, parse, startOfWeek, format } from "date-fns";
 import ptBR from "date-fns/locale/pt-BR";
@@ -48,6 +48,12 @@ const diaSemanaParaNumero = {
   "Sexta-feira": 5,
   Sábado: 6,
 };
+
+const minTime = new Date();
+minTime.setHours(7, 0, 0); // Define o horário mínimo para 07:00
+
+const maxTime = new Date();
+maxTime.setHours(22, 30, 0); // Define o horário máximo para 22:30
 
 const VisualizarAgenda = () => {
   const [events, setEvents] = useState([]);
@@ -157,6 +163,9 @@ const VisualizarAgenda = () => {
           onNavigate={handleNavigate}
           onView={onView}
           onSelectEvent={handleSelectEvent}
+          // Propriedades para horário min e máx a ser exibido na tabela
+          min={minTime}
+          max={maxTime}
         />
       )}
 

@@ -1,0 +1,15 @@
+.custom-event-container {
+  /* Remove qualquer restrição de altura e permite que o conteúdo cresça */
+  height: 100%;
+  width: 100%;
+  padding: 2px 5px;
+  box-sizing: border-box;
+  font-size: 0.8rem;
+  overflow-y: auto; /* Adiciona scroll se o conteúdo for muito grande */
+}
+
+.custom-event-container strong {
+  /* Permite que o título quebre a linha normalmente */
+  white-space: normal;
+  word-break: break-word;
+}
