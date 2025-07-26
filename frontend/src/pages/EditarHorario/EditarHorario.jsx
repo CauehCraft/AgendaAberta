@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import "./AdicionarHorario.css";
+import "./EditarHorario.css";
 
-const AdicionarHorario = () => {
-  // Estados para os campos do formulário
-  const [disciplina, setDisciplina] = useState("");
-  const [diaSemana, setDiaSemana] = useState("");
-  const [horaInicio, setHoraInicio] = useState("");
-  const [horaFim, setHoraFim] = useState("");
-  const [local, setLocal] = useState("");
+const EditarHorario = () => {
+  const { horarioId } = useParams();
+  const navigate = useNavigate();
 
-  // Estados para carregar as disciplinas da API
+  // Estados para o formulário
+  const [formData, setFormData] = useState({
+    disciplina: "",
+    dia_semana: "",
+    hora_inicio: "",
+    hora_fim: "",
+    local: "",
+  });
   const [disciplinas, setDisciplinas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState("");
 
-  // Estado de erros aprimorado (permanece o mesmo)
   const [errors, setErrors] = useState({
     disciplina: null,
     dia_semana: null,
@@ -23,28 +27,45 @@ const AdicionarHorario = () => {
     local: null,
     non_field_errors: null,
   });
-  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    const fetchDisciplinas = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get("/disciplinas/");
-        setDisciplinas(response.data);
+        const disciplinasResponse = await api.get("/disciplinas/");
+        setDisciplinas(disciplinasResponse.data);
+
+        const horarioResponse = await api.get(`/horarios/${horarioId}/`);
+        const horarioData = horarioResponse.data;
+
+        setFormData({
+          disciplina: horarioData.disciplina.id,
+          dia_semana: horarioData.dia_semana,
+          hora_inicio: horarioData.hora_inicio,
+          hora_fim: horarioData.hora_fim,
+          local: horarioData.local,
+        });
       } catch (err) {
         setErrors({
-          non_field_errors: "Não foi possível carregar as disciplinas.",
+          non_field_errors: "Não foi possível carregar os dados para edição.",
         });
-        console.error("Erro ao carregar disciplinas:", err);
+        console.error(err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchDisciplinas();
-  }, []);
+
+    fetchData();
+  }, [horarioId]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSuccessMessage("");
+    // Limpa os erros antigos antes de cada submissão
     setErrors({
       disciplina: null,
       dia_semana: null,
@@ -54,26 +75,16 @@ const AdicionarHorario = () => {
       non_field_errors: null,
     });
 
-    const payload = {
-      disciplina,
-      dia_semana: diaSemana,
-      hora_inicio: horaInicio,
-      hora_fim: horaFim,
-      local,
-    };
-
     try {
-      await api.post("/horarios/", payload);
-      setSuccessMessage("Horário cadastrado com sucesso!");
-      setDisciplina("");
-      setDiaSemana("");
-      setHoraInicio("");
-      setHoraFim("");
-      setLocal("");
+      // Usamos PATCH para atualizações parciais, o que é uma boa prática.
+      await api.patch(`/horarios/${horarioId}/`, formData);
+      setSuccessMessage("Horário atualizado com sucesso! Redirecionando...");
+
+      setTimeout(() => navigate("/dashboard/gerenciar-horarios"), 2000);
     } catch (err) {
+      // Lógica para extrair e exibir erros específicos do backend
       if (err.response && err.response.data && err.response.data.errors) {
         const backendErrors = err.response.data.errors;
-        // console.error("Erros recebidos do backend:", backendErrors);
         const newErrors = {};
         for (const field in backendErrors) {
           newErrors[field] = backendErrors[field];
@@ -86,8 +97,10 @@ const AdicionarHorario = () => {
       ) {
         setErrors({ non_field_errors: err.response.data.message });
       } else {
+        // Erro de rede ou outro problema não relacionado à validação
         setErrors({
-          non_field_errors: "Ocorreu um erro de comunicação. Tente novamente.",
+          non_field_errors:
+            "Ocorreu um erro de comunicação ao salvar as alterações.",
         });
       }
     }
@@ -96,20 +109,25 @@ const AdicionarHorario = () => {
   const errorMessages = Object.values(errors).filter((error) => error !== null);
 
   if (isLoading) {
-    return <div className="form-container">Carregando...</div>;
+    return (
+      <div className="form-container">
+        <h1>Carregando dados para edição...</h1>
+      </div>
+    );
   }
 
   return (
     <div className="form-container">
-      <h1 className="form-title">Adicionar Horário Semanal</h1>
+      <h1 className="form-title">Editar Horário</h1>
       <form onSubmit={handleSubmit}>
-        {/* Dropdown para Disciplinas */}
+        {/* Campo Disciplina */}
         <div className="input-group">
           <label htmlFor="disciplina">Disciplina</label>
           <select
+            name="disciplina"
             id="disciplina"
-            value={disciplina}
-            onChange={(e) => setDisciplina(e.target.value)}
+            value={formData.disciplina}
+            onChange={handleChange}
             required
           >
             <option value="" disabled>
@@ -123,13 +141,14 @@ const AdicionarHorario = () => {
           </select>
         </div>
 
-        {/* Dropdown para Dia da Semana */}
+        {/* Campo Dia da Semana */}
         <div className="input-group">
-          <label htmlFor="dia-semana">Dia da Semana</label>
+          <label htmlFor="dia_semana">Dia da Semana</label>
           <select
-            id="dia-semana"
-            value={diaSemana}
-            onChange={(e) => setDiaSemana(e.target.value)}
+            name="dia_semana"
+            id="dia_semana"
+            value={formData.dia_semana}
+            onChange={handleChange}
             required
           >
             <option value="" disabled>
@@ -144,46 +163,49 @@ const AdicionarHorario = () => {
           </select>
         </div>
 
-        {/* Inputs de Horário */}
+        {/* Campos de Horário */}
         <div className="time-inputs-container">
           <div className="input-group">
-            <label htmlFor="hora-inicio">Hora de Início</label>
+            <label htmlFor="hora_inicio">Hora de Início</label>
             <input
               type="time"
-              id="hora-inicio"
-              value={horaInicio}
-              onChange={(e) => setHoraInicio(e.target.value)}
+              name="hora_inicio"
+              id="hora_inicio"
+              value={formData.hora_inicio}
+              onChange={handleChange}
               required
             />
           </div>
           <div className="input-group">
-            <label htmlFor="hora-fim">Hora de Fim</label>
+            <label htmlFor="hora_fim">Hora de Fim</label>
             <input
               type="time"
-              id="hora-fim"
-              value={horaFim}
-              onChange={(e) => setHoraFim(e.target.value)}
+              name="hora_fim"
+              id="hora_fim"
+              value={formData.hora_fim}
+              onChange={handleChange}
               required
             />
           </div>
         </div>
 
-        {/* Input de Texto para Local */}
+        {/* Campo Local */}
         <div className="input-group">
           <label htmlFor="local">Local</label>
           <input
             type="text"
+            name="local"
             id="local"
             placeholder="Ex: Sala 201, Bloco B"
-            value={local}
-            onChange={(e) => setLocal(e.target.value)}
+            value={formData.local}
+            onChange={handleChange}
             required
           />
         </div>
 
         {/* Botão e Mensagens de Feedback */}
         <button type="submit" className="btn btn-primary btn-salvar">
-          Salvar Horário
+          Salvar Alterações
         </button>
 
         {successMessage && (
@@ -193,7 +215,6 @@ const AdicionarHorario = () => {
         {/* Bloco para exibir TODAS as mensagens de erro */}
         {errorMessages.length > 0 && (
           <div className="mensagem-erro">
-            {/* Mapeia cada mensagem de erro para um parágrafo */}
             {errorMessages.map((msg, index) => (
               <p key={index}>{msg}</p>
             ))}
@@ -204,4 +225,4 @@ const AdicionarHorario = () => {
   );
 };
 
-export default AdicionarHorario;
+export default EditarHorario;

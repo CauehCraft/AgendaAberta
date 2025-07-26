@@ -2,10 +2,12 @@ from rest_framework import generics, viewsets, filters, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import action
+
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import ValidationError
+
 from .models import CustomUser, Disciplina, Horario
 from .permissions import IsOwner, IsProfessorOrMonitor
 from .serializers import (
@@ -13,7 +15,6 @@ from .serializers import (
     HorarioDetailSerializer, HorarioPublicSerializer, UserBasicSerializer
 )
 from .validators import HorarioValidator
-from .exceptions import BusinessRuleException, AgendaAbertaErrors
 from .filters import HorarioFilter
 from .responses import ApiResponse
 
@@ -30,7 +31,6 @@ class DeleteUserView(APIView):
 
 class HorarioViewSet(viewsets.ModelViewSet):
     queryset = Horario.objects.all().select_related('disciplina', 'professor_monitor')
-    serializer_class = HorarioSerializer
     permission_classes = [IsAuthenticated, IsProfessorOrMonitor, IsOwner]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['dia_semana', 'disciplina__curso', 'disciplina']
@@ -38,13 +38,35 @@ class HorarioViewSet(viewsets.ModelViewSet):
     ordering_fields = ['dia_semana', 'hora_inicio', 'hora_fim', 'ultima_atualizacao']
     
     def get_serializer_class(self):
-        """Retorna o serializer apropriado com base na ação"""
+        """Retorna o serializer apropriado com base na ação."""
         if self.action in ['list', 'retrieve']:
             return HorarioDetailSerializer
         return HorarioSerializer
         
+    def get_queryset(self):
+        """Filtra os horários para mostrar apenas os do usuário logado."""
+        if getattr(self, 'swagger_fake_view', False) or not self.request.user.is_authenticated:
+            return Horario.objects.none()
+        # Assume que 'professor' e 'monitor' são os tipos que podem criar horários
+        if self.request.user.tipo in ['professor', 'monitor']:
+            return Horario.objects.filter(professor_monitor=self.request.user)
+        # Admins podem ver tudo (ajuste conforme sua regra de negócio)
+        return Horario.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save(professor_monitor=self.request.user)
+    
+    def perform_update(self, serializer):
+        serializer.save()
+    
+    def perform_destroy(self, instance):
+        """
+        Exclui a instância do horário sem nenhuma validação de data,
+        pois os horários são fixos na grade semanal.
+        """
+        instance.delete()
+
     def create(self, request, *args, **kwargs):
-        """Sobrescreve o método create para fornecer feedback claro"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -56,7 +78,6 @@ class HorarioViewSet(viewsets.ModelViewSet):
         )
     
     def update(self, request, *args, **kwargs):
-        """Sobrescreve o método update para fornecer feedback claro"""
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -64,8 +85,6 @@ class HorarioViewSet(viewsets.ModelViewSet):
         self.perform_update(serializer)
         
         if getattr(instance, '_prefetched_objects_cache', None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
             
         return ApiResponse.success(
@@ -75,113 +94,17 @@ class HorarioViewSet(viewsets.ModelViewSet):
         )
     
     def destroy(self, request, *args, **kwargs):
-        """Sobrescreve o método destroy para fornecer feedback claro"""
         instance = self.get_object()
-        self.perform_destroy(instance)
+        self.perform_destroy(instance) # A validação ocorre dentro deste método
         return ApiResponse.success(
             message="Horário excluído com sucesso!",
             status_code=status.HTTP_200_OK
         )
 
-    def get_queryset(self):
-        if getattr(self, 'swagger_fake_view', False) or not self.request.user.is_authenticated:
-            return Horario.objects.none()
-        if self.request.user.tipo in ['professor', 'monitor']:
-            return Horario.objects.filter(professor_monitor=self.request.user)
-        return Horario.objects.all()
-    
-    def perform_create(self, serializer):
-        """Validar campos obrigatórios e conflitos antes de criar"""
-        try:
-            # Validar campos obrigatórios
-            disciplina = serializer.validated_data.get('disciplina')
-            local = serializer.validated_data.get('local')
-            HorarioValidator.validate_required_fields(disciplina=disciplina, local=local)
-            
-            # Validar conflitos de horário
-            dia_semana = serializer.validated_data.get('dia_semana')
-            hora_inicio = serializer.validated_data.get('hora_inicio')
-            hora_fim = serializer.validated_data.get('hora_fim')
-            
-            if not HorarioValidator.validate_schedule_conflict(
-                professor=self.request.user,
-                dia_semana=dia_semana,
-                hora_inicio=hora_inicio,
-                hora_fim=hora_fim
-            ):
-                raise BusinessRuleException(
-                    AgendaAbertaErrors.HORARIO_CONFLITO,
-                    'Conflito de horário detectado. Você já possui um horário cadastrado que se sobrepõe a este.'
-                )
-            
-            # Salvar com o professor/monitor atual
-            serializer.save(professor_monitor=self.request.user)
-            
-        except Exception as e:
-            if not isinstance(e, BusinessRuleException):
-                raise BusinessRuleException(
-                    AgendaAbertaErrors.ERRO_INTERNO,
-                    str(e)
-                )
-            raise
-    
-    def perform_update(self, serializer):
-        """Validar se é horário futuro e se não há conflitos antes de atualizar"""
-        try:
-            instance = self.get_object()
-            
-            # Validar se é horário futuro
-            
-            
-            # Validar campos obrigatórios
-            disciplina = serializer.validated_data.get('disciplina', instance.disciplina)
-            local = serializer.validated_data.get('local', instance.local)
-            HorarioValidator.validate_required_fields(disciplina=disciplina, local=local)
-            
-            # Validar conflitos de horário
-            dia_semana = serializer.validated_data.get('dia_semana', instance.dia_semana)
-            hora_inicio = serializer.validated_data.get('hora_inicio', instance.hora_inicio)
-            hora_fim = serializer.validated_data.get('hora_fim', instance.hora_fim)
-            
-            if not HorarioValidator.validate_schedule_conflict(
-                professor=self.request.user,
-                dia_semana=dia_semana,
-                hora_inicio=hora_inicio,
-                hora_fim=hora_fim,
-                exclude_id=instance.id
-            ):
-                raise BusinessRuleException(
-                    AgendaAbertaErrors.HORARIO_CONFLITO,
-                    'Conflito de horário detectado. Você já possui um horário cadastrado que se sobrepõe a este.'
-                )
-            
-            serializer.save()
-            
-        except Exception as e:
-            if not isinstance(e, BusinessRuleException):
-                raise BusinessRuleException(
-                    AgendaAbertaErrors.ERRO_INTERNO,
-                    str(e)
-                )
-            raise
-    
-    def perform_destroy(self, instance):
-        """Validar se é horário futuro antes de excluir"""
-        try:
-            
-            instance.delete()
-        except Exception as e:
-            if not isinstance(e, BusinessRuleException):
-                raise BusinessRuleException(
-                    AgendaAbertaErrors.ERRO_INTERNO,
-                    str(e)
-                )
-            raise
-
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class HorarioPublicViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ViewSet para visualização pública de horários, sem necessidade de autenticação.
-    Permite apenas operações de leitura (list, retrieve).
+    ViewSet para visualização pública de horários, com cache e filtros otimizados.
     """
     queryset = Horario.objects.filter(ativo=True).select_related('disciplina', 'professor_monitor')
     serializer_class = HorarioPublicSerializer
@@ -190,8 +113,7 @@ class HorarioPublicViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = HorarioFilter
     search_fields = ['disciplina__nome', 'disciplina__codigo', 'professor_monitor__username', 'local']
     ordering_fields = ['dia_semana', 'hora_inicio', 'hora_fim', 'ultima_atualizacao']
-    
-    @method_decorator(cache_page(60 * 15))  # Cache por 15 minutos
+
     def list(self, request, *args, **kwargs):
         """Adiciona mensagem informativa sobre o propósito do sistema"""
         response = super().list(request, *args, **kwargs)
@@ -212,39 +134,8 @@ class HorarioPublicViewSet(viewsets.ReadOnlyModelViewSet):
         if isinstance(response.data, dict):
             response.data['message'] = "Este sistema é apenas para visualização de horários disponíveis, não para agendamento."
         return response
+
     
-    def get_queryset(self):
-        """Aplica filtros customizados ao queryset"""
-        queryset = super().get_queryset()
-        
-        # Filtrar por curso
-        curso = self.request.query_params.get('curso')
-        if curso:
-            queryset = queryset.filter(disciplina__curso__icontains=curso)
-        
-        # Filtrar por disciplina
-        disciplina_id = self.request.query_params.get('disciplina')
-        if disciplina_id:
-            try:
-                queryset = queryset.filter(disciplina_id=int(disciplina_id))
-            except (ValueError, TypeError):
-                pass
-        
-        # Filtrar por professor/monitor
-        professor = self.request.query_params.get('professor')
-        if professor:
-            queryset = queryset.filter(professor_monitor__username__icontains=professor)
-        
-        # Filtrar por dia da semana
-        dia_semana = self.request.query_params.get('dia_semana')
-        if dia_semana:
-            queryset = queryset.filter(dia_semana=dia_semana)
-        
-        return queryset
-
-
-
-
 class DisciplinaViewSet(viewsets.ModelViewSet):
     queryset = Disciplina.objects.all()
     serializer_class = DisciplinaSerializer
