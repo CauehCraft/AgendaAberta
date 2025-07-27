@@ -1,19 +1,18 @@
-import { useState, useCallback } from 'react';
-import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import format from 'date-fns/format';
-import parse from 'date-fns/parse';
-import startOfWeek from 'date-fns/startOfWeek';
-import getDay from 'date-fns/getDay';
-import ptBR from 'date-fns/locale/pt-BR';
-import ModalDetalhesEvento from '../../components/ModalDetalhesEvento/ModalDetalhesEvento';
+import { useState, useCallback, useEffect } from "react";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import { getDay, parse, startOfWeek, format } from "date-fns";
+import ptBR from "date-fns/locale/pt-BR";
+import ModalDetalhesEvento from "../../components/ModalDetalhesEvento/ModalDetalhesEvento";
+import api from "../../services/api";
 
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-import './VisualizarAgenda.css';
+// Importação obrigatória do CSS da biblioteca
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "./VisualizarAgenda.css";
 
+// Configuração do localizer para o date-fns com idioma português
 const locales = {
-  'pt-BR': ptBR,
+  "pt-BR": ptBR,
 };
-
 const localizer = dateFnsLocalizer({
   format,
   parse,
@@ -22,66 +21,123 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-const mockEvents = [
-{
-    title: 'Atendimento de Cálculo I',
-    start: new Date(2025, 5, 21, 9, 0, 0), // Ano, Mês (0-11), Dia, Hora, Min, Seg
-    end: new Date(2025, 5, 21, 10, 0, 0),
-    resource: 'Sala 201',
-  },
-  {
-    title: 'Atendimento de Matemática',
-    start: new Date(2025, 6, 21, 9, 0, 0), // Ano, Mês (0-11), Dia, Hora, Min, Seg
-    end: new Date(2025, 6, 21, 10, 0, 0),
-    resource: 'Sala 201',
-  },
-  {
-    title: 'Atendimento de Física',
-    start: new Date(2025, 6, 22, 11, 0, 0),
-    end: new Date(2025, 6, 22, 12, 0, 0),
-    resource: 'Laboratório 1',
-  },
-  {
-    title: 'Atendimento de Química',
-    start: new Date(2025, 6, 23, 14, 0, 0),
-    end: new Date(2025, 6, 23, 15, 0, 0),
-    resource: 'Online',
-  },
-];
-
+// Tradução da interface do calendário
 const messages = {
-  allDay: 'Dia Inteiro',
-  previous: '<',
-  next: '>',
-  today: 'Hoje',
-  month: 'Mês',
-  week: 'Semana',
-  day: 'Dia',
-  agenda: 'Agenda',
-  date: 'Data',
-  time: 'Hora',
-  event: 'Evento',
+  allDay: "Dia Inteiro",
+  previous: "<",
+  next: ">",
+  today: "Hoje",
+  month: "Mês",
+  week: "Semana",
+  day: "Dia",
+  agenda: "Agenda",
+  date: "Data",
+  time: "Hora",
+  event: "Evento",
   showMore: (total) => `+ Ver mais (${total})`,
-  noEventsInRange: 'Não há eventos neste período.',
+  noEventsInRange: "Não há eventos neste período.",
 };
 
-const VisualizarAgenda = () => {
-    // Estados para controlar a data e a visão atual
-  const [date, setDate] = useState(new Date());
-  const [view, setView] = useState('month'); // A visão inicial é 'month'
+// Objeto auxiliar para converter o nome do dia em um número (padrão Date: 0=Domingo)
+const diaSemanaParaNumero = {
+  Domingo: 0,
+  "Segunda-feira": 1,
+  "Terça-feira": 2,
+  "Quarta-feira": 3,
+  "Quinta-feira": 4,
+  "Sexta-feira": 5,
+  Sábado: 6,
+};
 
-   // Estados para o modal de detalhes
+const minTime = new Date();
+minTime.setHours(7, 0, 0); // Define o horário mínimo para 07:00
+
+const maxTime = new Date();
+maxTime.setHours(22, 30, 0); // Define o horário máximo para 22:30
+
+const VisualizarAgenda = () => {
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [date, setDate] = useState(new Date());
+  const [view, setView] = useState("month");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // Funções que serão chamadas quando o usuário interagir com o calendário
+  useEffect(() => {
+    const fetchAndMapHorarios = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.get("/horarios/");
+        const horariosSemanais = response.data.results || response.data; // Compatível com e sem paginação do DRF
+
+        const mappedEvents = horariosSemanais.flatMap((horario) => {
+          const eventosGerados = [];
+          const targetDayOfWeek = diaSemanaParaNumero[horario.dia_semana];
+          const [startHour, startMinute] = horario.hora_inicio
+            .split(":")
+            .map(Number);
+          const [endHour, endMinute] = horario.hora_fim.split(":").map(Number);
+
+          // Gera eventos para um intervalo de meses (anterior, atual, próximo) para cobrir a visualização
+          for (let monthOffset = -1; monthOffset <= 1; monthOffset++) {
+            let dataBase = new Date(
+              date.getFullYear(),
+              date.getMonth() + monthOffset,
+              1
+            );
+            for (let day = 1; day <= 31; day++) {
+              let diaCorrente = new Date(
+                dataBase.getFullYear(),
+                dataBase.getMonth(),
+                day
+              );
+
+              // Garante que não pule para o próximo mês dentro do loop
+              if (diaCorrente.getMonth() !== dataBase.getMonth()) continue;
+
+              if (diaCorrente.getDay() === targetDayOfWeek) {
+                eventosGerados.push({
+                  id: horario.id, // ID original do horário para a edição
+                  title: horario.disciplina.nome,
+                  start: new Date(
+                    diaCorrente.getFullYear(),
+                    diaCorrente.getMonth(),
+                    diaCorrente.getDate(),
+                    startHour,
+                    startMinute
+                  ),
+                  end: new Date(
+                    diaCorrente.getFullYear(),
+                    diaCorrente.getMonth(),
+                    diaCorrente.getDate(),
+                    endHour,
+                    endMinute
+                  ),
+                  resource: horario.local,
+                });
+              }
+            }
+          }
+          return eventosGerados;
+        });
+
+        setEvents(mappedEvents);
+      } catch (error) {
+        console.error("Erro ao buscar e mapear horários:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAndMapHorarios();
+  }, [date]); // Re-executa quando o usuário navega para outro mês/ano
+
   const handleNavigate = useCallback((newDate) => setDate(newDate), [setDate]);
   const onView = useCallback((newView) => setView(newView), [setView]);
 
-  // Função para lidar com o clique em um evento
   const handleSelectEvent = useCallback((event) => {
-    setSelectedEvent(event); // Guarda as informações do evento clicado
-    setIsModalOpen(true);    // Abre o modal
+    setSelectedEvent(event);
+    setIsModalOpen(true);
   }, []);
 
   const closeModal = () => {
@@ -89,22 +145,29 @@ const VisualizarAgenda = () => {
     setSelectedEvent(null);
   };
 
-return (
+  return (
     <div className="calendar-container">
-      <Calendar
-        localizer={localizer}
-        events={mockEvents}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: 'calc(100vh - 10rem)' }}
-        culture="pt-BR"
-        messages={messages}
-        date={date}
-        view={view}
-        onNavigate={handleNavigate}
-        onView={onView}
-        onSelectEvent={handleSelectEvent}
-      />
+      {isLoading ? (
+        <h1>Carregando agenda...</h1>
+      ) : (
+        <Calendar
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: "calc(100vh - 10rem)" }}
+          culture="pt-BR"
+          messages={messages}
+          date={date}
+          view={view}
+          onNavigate={handleNavigate}
+          onView={onView}
+          onSelectEvent={handleSelectEvent}
+          // Propriedades para horário min e máx a ser exibido na tabela
+          min={minTime}
+          max={maxTime}
+        />
+      )}
 
       <ModalDetalhesEvento
         isOpen={isModalOpen}

@@ -1,7 +1,6 @@
 .form-container {
   padding: 2rem 3rem;
   background-color: #fff;
-  height: 100%;
 }
 
 .form-title {
@@ -13,6 +12,7 @@
 
 .input-group {
   margin-bottom: 1.5rem;
+  max-width: 450px; /* Limita a largura dos campos */
 }
 
 .input-group label {
@@ -23,8 +23,10 @@
   margin-bottom: 0.5rem;
 }
 
+/* Estilo unificado para todos os inputs e selects */
 .input-group select,
-.input-group .time-input-wrapper input {
+.input-group input {
+  width: 100%;
   padding: 0.85rem 1rem;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
@@ -32,12 +34,7 @@
   font-size: 1rem;
   color: #111827;
   font-family: inherit;
-  width: 100%;
   box-sizing: border-box;
-}
-
-.input-group.dropdown-group {
-  max-width: 450px;
 }
 
 .input-group select {
@@ -60,21 +57,29 @@
   flex: 1;
 }
 
-.time-input-wrapper {
-  position: relative;
-}
-
-.time-input-wrapper .time-icon {
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6b7280;
-  pointer-events: none;
-}
-
 .btn-salvar {
   max-width: 200px;
   padding: 0.9rem 2rem;
   margin-top: 1rem;
+}
+
+/* Mensagens de feedback */
+.mensagem-sucesso {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  max-width: 450px;
+}
+
+.mensagem-erro {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  max-width: 450px;
 }

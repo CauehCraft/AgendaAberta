@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
 )
 from .views import (
     DeleteUserView, DisciplinaViewSet, 
-    HorarioViewSet, HorarioPublicViewSet, RegisterView
+    HorarioViewSet, HorarioPublicViewSet, RegisterView, MeView
 )
 
 router = DefaultRouter()
@@ -19,6 +19,7 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('users/me/', MeView.as_view(), name='me'),
     path('delete-user/', DeleteUserView.as_view(), name='delete_user'),
     path('', include(router.urls)),
 ]

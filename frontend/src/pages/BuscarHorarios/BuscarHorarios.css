@@ -1,0 +1,113 @@
+.search-container {
+  padding: 2rem 3rem;
+}
+
+.search-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 2rem;
+}
+
+.search-bar-wrapper {
+  margin-bottom: 2rem;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 600px;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+/* --- Estilos da Tabela (Consistente com GerenciarHorarios.css) --- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden; /* Importante para o border-radius funcionar */
+}
+
+.data-table th,
+.data-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table thead th {
+  background-color: #f9fafb;
+  font-size: 0.875rem;
+  color: #4b5563;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.data-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.pagination {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.page-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  background-color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* --- Media Query para Responsividade da Tabela --- */
+
+@media (max-width: 768px) {
+  /* Esconde o cabeçalho em telas pequenas */
+  .data-table thead {
+    display: none;
+  }
+
+  /* Transforma a linha em um "card" */
+  .data-table tbody tr {
+    display: block;
+    margin-bottom: 2rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Transforma as células em blocos empilhados */
+  .data-table td {
+    display: block;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+  }
+
+  /* Adiciona o título da coluna antes de cada dado */
+  .data-table td::before {
+    content: attr(data-label);
+    float: left;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: #555;
+  }
+
+  .data-table td:last-child {
+    border-bottom: 0;
+  }
+}

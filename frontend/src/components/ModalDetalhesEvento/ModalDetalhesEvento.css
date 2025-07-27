@@ -59,3 +59,28 @@
   margin-right: 1rem;
   width: 20px; /* Alinhamento dos ícones */
 }
+
+.modal-details-footer {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end; /* Alinha o botão à direita */
+}
+
+.btn-edit-event {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #e0e7ff;
+  color: #4338ca;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-edit-event:hover {
+  background-color: #c7d2fe;
+}

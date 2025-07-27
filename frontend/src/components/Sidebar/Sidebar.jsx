@@ -1,46 +1,124 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import './Sidebar.css';
+import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import {
   FaUserCircle,
-  FaCalendarPlus,
   FaClock,
   FaEdit,
   FaCalendarAlt,
-  FaTrashAlt
-} from 'react-icons/fa';
+  FaSignOutAlt,
+  FaBars,
+  FaTimes,
+  FaSearch,
+} from "react-icons/fa";
+import "./Sidebar.css";
 
 const Sidebar = () => {
-  const user = {
-    name: 'Dr. Amelia Harper',
-    role: 'Professor',
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLinkClick = () => {
+    if (isMenuOpen) {
+      toggleMenu();
+    }
   };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-profile">
-        <FaUserCircle className="sidebar-icon profile-icon" />
-        <div>
-          <h3>{user.name}</h3>
-          <p>{user.role}</p>
+    <>
+      <button className="mobile-menu-toggle" onClick={toggleMenu}>
+        <FaBars />
+      </button>
+
+      <aside className={`sidebar ${isMenuOpen ? "open" : ""}`}>
+        <button className="sidebar-close-btn" onClick={toggleMenu}>
+          <FaTimes />
+        </button>
+
+        <div className="sidebar-profile">
+          <NavLink to="/dashboard" onClick={handleLinkClick}>
+            <FaUserCircle className="sidebar-icon profile-icon" />
+          </NavLink>
+          <div>
+            {user && <h3>{user.nome_completo || user.username}</h3>}
+            {user && (
+              <p>{user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1)}</p>
+            )}
+          </div>
         </div>
-      </div>
 
-      <nav className="sidebar-nav">
-        <ul>
-          <li><NavLink to="/dashboard/criar-agenda"><FaCalendarPlus className="sidebar-icon" /> Criar Agenda</NavLink></li>
-          <li><NavLink to="/dashboard/adicionar-horario"><FaClock className="sidebar-icon" /> Adicionar Horário</NavLink></li>
-          <li><NavLink to="/dashboard/editar-horario"><FaEdit className="sidebar-icon" /> Editar/Deletar Horário</NavLink></li>
-          <li><NavLink to="/dashboard/visualizar-agenda"><FaCalendarAlt className="sidebar-icon" /> Visualizar Agenda</NavLink></li>
-        </ul>
-      </nav>
+        <nav className="sidebar-nav">
+          <ul>
+            {/* === RENDERIZAÇÃO CONDICIONAL PARA PROFESSOR/MONITOR === */}
+            {(user?.tipo === "professor" || user?.tipo === "monitor") && (
+              <>
+                <li>
+                  <NavLink
+                    to="/dashboard/adicionar-horario"
+                    onClick={handleLinkClick}
+                  >
+                    <FaClock className="sidebar-icon" />
+                    <span>Adicionar Horário</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/dashboard/gerenciar-horarios"
+                    onClick={handleLinkClick}
+                  >
+                    <FaEdit className="sidebar-icon" />
+                    <span>Gerenciar horários</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/dashboard/visualizar-agenda"
+                    onClick={handleLinkClick}
+                  >
+                    <FaCalendarAlt className="sidebar-icon" />
+                    <span>Visualizar Agenda</span>
+                  </NavLink>
+                </li>
+              </>
+            )}
 
-      <div className="sidebar-footer">
-        <a href="#" className="delete-account">
-          <FaTrashAlt className="sidebar-icon" /> Excluir Conta
-        </a>
-      </div>
-    </aside>
+            {/* === RENDERIZAÇÃO CONDICIONAL PARA ALUNO === */}
+            {user?.tipo === "aluno" && (
+              <>
+                <li>
+                  {/* Link para uma futura página de busca */}
+                  <NavLink
+                    to="/dashboard/buscar-horarios"
+                    onClick={handleLinkClick}
+                  >
+                    <FaSearch className="sidebar-icon" />
+                    <span>Buscar Horários</span>
+                  </NavLink>
+                </li>
+              </>
+            )}
+          </ul>
+        </nav>
+
+        <div className="sidebar-footer">
+          <button className="logout-button" onClick={handleLogout}>
+            <FaSignOutAlt className="sidebar-icon" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {isMenuOpen && <div className="overlay" onClick={toggleMenu}></div>}
+    </>
   );
 };
 

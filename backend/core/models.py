@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import Q, CheckConstraint
 from django.db.models import Q, CheckConstraint
 from django.utils import timezone
+from .managers import CustomUserManager
 
 class CustomUser(AbstractUser):
     TIPO_USUARIO_CHOICES = (
@@ -29,6 +30,7 @@ class CustomUser(AbstractUser):
         related_name="customuser_set",
         related_query_name="user",
     )
+    objects = CustomUserManager()
 
     class Meta:
         constraints = [
