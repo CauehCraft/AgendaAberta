@@ -3,13 +3,13 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import {
   FaUserCircle,
-  FaCalendarPlus,
   FaClock,
   FaEdit,
   FaCalendarAlt,
   FaSignOutAlt,
   FaBars,
   FaTimes,
+  FaSearch,
 } from "react-icons/fa";
 import "./Sidebar.css";
 
@@ -27,6 +27,12 @@ const Sidebar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const handleLinkClick = () => {
+    if (isMenuOpen) {
+      toggleMenu();
+    }
+  };
+
   return (
     <>
       <button className="mobile-menu-toggle" onClick={toggleMenu}>
@@ -39,7 +45,9 @@ const Sidebar = () => {
         </button>
 
         <div className="sidebar-profile">
-          <FaUserCircle className="sidebar-icon profile-icon" />
+          <NavLink to="/dashboard" onClick={handleLinkClick}>
+            <FaUserCircle className="sidebar-icon profile-icon" />
+          </NavLink>
           <div>
             {user && <h3>{user.nome_completo || user.username}</h3>}
             {user && (
@@ -50,25 +58,54 @@ const Sidebar = () => {
 
         <nav className="sidebar-nav">
           <ul>
-            {/* <li><NavLink to="/dashboard/criar-agenda" onClick={toggleMenu}><FaCalendarPlus className="sidebar-icon" /><span>Criar Agenda</span></NavLink></li>*/}
-            <li>
-              <NavLink to="/dashboard/adicionar-horario" onClick={toggleMenu}>
-                <FaClock className="sidebar-icon" />
-                <span>Adicionar Horário</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/dashboard/gerenciar-horarios" onClick={toggleMenu}>
-                <FaEdit className="sidebar-icon" />
-                <span>Gerenciar horários</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/dashboard/visualizar-agenda" onClick={toggleMenu}>
-                <FaCalendarAlt className="sidebar-icon" />
-                <span>Visualizar Agenda</span>
-              </NavLink>
-            </li>
+            {/* === RENDERIZAÇÃO CONDICIONAL PARA PROFESSOR/MONITOR === */}
+            {(user?.tipo === "professor" || user?.tipo === "monitor") && (
+              <>
+                <li>
+                  <NavLink
+                    to="/dashboard/adicionar-horario"
+                    onClick={handleLinkClick}
+                  >
+                    <FaClock className="sidebar-icon" />
+                    <span>Adicionar Horário</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/dashboard/gerenciar-horarios"
+                    onClick={handleLinkClick}
+                  >
+                    <FaEdit className="sidebar-icon" />
+                    <span>Gerenciar horários</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/dashboard/visualizar-agenda"
+                    onClick={handleLinkClick}
+                  >
+                    <FaCalendarAlt className="sidebar-icon" />
+                    <span>Visualizar Agenda</span>
+                  </NavLink>
+                </li>
+              </>
+            )}
+
+            {/* === RENDERIZAÇÃO CONDICIONAL PARA ALUNO === */}
+            {user?.tipo === "aluno" && (
+              <>
+                <li>
+                  {/* Link para uma futura página de busca */}
+                  <NavLink
+                    to="/dashboard/buscar-horarios"
+                    onClick={handleLinkClick}
+                  >
+                    <FaSearch className="sidebar-icon" />
+                    <span>Buscar Horários</span>
+                  </NavLink>
+                </li>
+              </>
+            )}
           </ul>
         </nav>
 

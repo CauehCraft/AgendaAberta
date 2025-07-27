@@ -147,3 +147,15 @@
     margin-top: 0; /* Reseta a margem */
   }
 }
+
+.sidebar-profile a {
+  text-decoration: none;
+  color: inherit;
+  outline: none;
+  background-color: transparent;
+}
+
+.sidebar-profile a:active,
+.sidebar-profile a:focus {
+  box-shadow: none;
+}
