@@ -1,0 +1,9 @@
+.calendar-container {
+  padding: 2rem;
+  height: 100%;
+}
+
+.rbc-event {
+  background-color: #2563eb; /* Azul que estamos usando no projeto */
+  border-color: #1d4ed8;
+}

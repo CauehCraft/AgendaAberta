@@ -1,0 +1,39 @@
+.dashboard-layout {
+  display: flex;
+}
+
+.main-content {
+  flex-grow: 1;
+  width: 100%;
+}
+
+.welcome-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 2rem;
+}
+
+.main-header {
+  text-align: center;
+  max-width: 800px;
+}
+
+.main-header h1 {
+  font-size: 2.2rem;
+  margin-top: 0;
+  color: #222;
+}
+
+.main-header p {
+  font-size: 1.1rem;
+  color: #555;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+}
