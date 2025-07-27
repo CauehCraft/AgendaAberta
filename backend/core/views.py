@@ -111,7 +111,14 @@ class HorarioPublicViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = HorarioFilter
-    search_fields = ['disciplina__nome', 'disciplina__codigo', 'professor_monitor__username', 'local']
+    search_fields = [
+        'disciplina__nome', 
+        'disciplina__codigo', 
+        'professor_monitor__username', 
+        'professor_monitor__first_name', # Adicionado
+        'professor_monitor__last_name',  # Adicionado
+        'local'
+    ]
     ordering_fields = ['dia_semana', 'hora_inicio', 'hora_fim', 'ultima_atualizacao']
 
     def list(self, request, *args, **kwargs):

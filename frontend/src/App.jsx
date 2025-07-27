@@ -11,6 +11,7 @@ import AdicionarHorario from "./pages/AdicionarHorario/AdicionarHorario";
 import GerenciarHorarios from "./pages/GerenciarHorarios/GerenciarHorarios";
 import VisualizarAgenda from "./pages/VisualizarAgenda/VisualizarAgenda";
 import EditarHorario from "./pages/EditarHorario/EditarHorario";
+import BuscarHorarios from "./pages/BuscarHorarios/BuscarHorarios";
 import Welcome from "./pages/Welcome/Welcome";
 import { AuthProvider } from "./context/AuthProvider";
 import { useAuth } from "./hooks/useAuth";
@@ -34,6 +35,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />}>
               <Route index element={<Welcome />} />
+              {/* ROTAS PROFESSOR/MONITOR */}
               <Route path="adicionar-horario" element={<AdicionarHorario />} />
               <Route
                 path="gerenciar-horarios/:horarioId"
@@ -44,6 +46,8 @@ function App() {
                 element={<GerenciarHorarios />}
               />
               <Route path="visualizar-agenda" element={<VisualizarAgenda />} />
+              {/* ROTAS ALUNO */}
+              <Route path="buscar-horarios" element={<BuscarHorarios />} />
             </Route>
           </Route>
 
