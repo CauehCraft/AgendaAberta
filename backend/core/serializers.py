@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email', 'password', 'tipo', 'first_name', 'last_name')
+        fields = ('id', 'username', 'email', 'password', 'first_name', 'last_name')
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_username(self, value):
@@ -34,14 +34,21 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password'],
-            tipo=validated_data['tipo'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
-        )
+        """
+        Cria o usuário e atribui o 'tipo' automaticamente com base no domínio do e-mail.
+        """
+        email = validated_data.get('email', '').lower()
+        
+        tipo_usuario = ''
+        if email.endswith('@alunos.ufersa.edu.br'):
+            tipo_usuario = 'aluno'
+        elif email.endswith('@ufersa.edu.br'):
+            tipo_usuario = 'professor'
+        
+        # Adiciona o tipo determinado aos dados antes de criar o usuário
+        validated_data['tipo'] = tipo_usuario
+        
+        user = CustomUser.objects.create_user(**validated_data)
         return user
 
 class UserBasicSerializer(serializers.ModelSerializer):

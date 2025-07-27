@@ -10,7 +10,6 @@ const Cadastro = () => {
     last_name: "",
     email: "",
     password: "",
-    tipo: "aluno",
   });
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
@@ -75,11 +74,9 @@ const Cadastro = () => {
     } catch (err) {
       const backendResponse = err.response?.data;
       if (backendResponse && backendResponse.errors) {
-        // Agora pegamos o objeto que está DENTRO de 'errors'
         // console.log("Erros de validação específicos:", backendResponse.errors);
         setErrors(backendResponse.errors);
       } else {
-        // Se a estrutura do erro for diferente, mostramos uma mensagem genérica
         setApiError("Ocorreu um erro inesperado. Tente novamente.");
       }
     }
@@ -152,19 +149,6 @@ const Cadastro = () => {
             {errors.password && (
               <p className="field-error-message">{errors.password}</p>
             )}
-          </div>
-          <div className="input-group">
-            <label htmlFor="tipo">Eu sou:</label>
-            <select
-              name="tipo"
-              id="tipo"
-              value={formData.tipo}
-              onChange={handleChange}
-            >
-              <option value="aluno">Aluno</option>
-              <option value="professor">Professor</option>
-              <option value="monitor">Monitor</option>
-            </select>
           </div>
           <button type="submit" className="btn btn-primary">
             Cadastrar
