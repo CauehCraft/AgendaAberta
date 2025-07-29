@@ -1,6 +1,8 @@
 .form-container {
   padding: 2rem 3rem;
   background-color: #fff;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .form-title {
@@ -12,7 +14,7 @@
 
 .input-group {
   margin-bottom: 1.5rem;
-  max-width: 450px; /* Limita a largura dos campos */
+  max-width: 450px;
 }
 
 .input-group label {
